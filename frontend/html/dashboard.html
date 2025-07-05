@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="../css/dashboard.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -36,21 +37,21 @@
                     <i class="fas fa-chart-line"></i>
                     <span>Overview</span>
                 </a>
-                <a href="#predictions" class="nav-item" onclick="showSection('predictions')">
-                    <i class="fas fa-crystal-ball"></i>
-                    <span>Predictions</span>
-                </a>
                 <a href="#shelters" class="nav-item" onclick="showSection('shelters')">
                     <i class="fas fa-building"></i>
                     <span>Shelters</span>
                 </a>
-                <a href="#resources" class="nav-item" onclick="showSection('resources')">
-                    <i class="fas fa-boxes"></i>
-                    <span>Resources</span>
+                <a href="#data-entry" class="nav-item" onclick="showSection('data-entry')">
+                    <i class="fas fa-edit"></i>
+                    <span>Data Entry</span>
                 </a>
                 <a href="#alerts" class="nav-item" onclick="showSection('alerts')">
                     <i class="fas fa-bell"></i>
                     <span>Alerts</span>
+                </a>
+                <a href="#map" class="nav-item" onclick="showSection('map')">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Map View</span>
                 </a>
             </nav>
         </aside>
@@ -104,49 +105,29 @@
                     </div>
                 </div>
 
+                <!-- Welcome Message for New Users -->
+                <div id="welcomeMessage" class="welcome-message" style="display: none;">
+                    <div class="welcome-content">
+                        <h2>Welcome to ShelterFlow!</h2>
+                        <p>You haven't added any shelters yet. Get started by adding your first shelter to begin monitoring and predicting occupancy.</p>
+                        <button class="btn btn-primary" onclick="showAddShelterModal()">
+                            <i class="fas fa-plus"></i>
+                            Add Your First Shelter
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Shelter List -->
-                <div class="shelter-list">
-                    <h2>Shelter Predictions</h2>
+                <div id="shelterList" class="shelter-list" style="display: none;">
+                    <div class="list-header">
+                        <h2>Your Shelters</h2>
+                        <button class="btn btn-primary" onclick="showAddShelterModal()">
+                            <i class="fas fa-plus"></i>
+                            Add Shelter
+                        </button>
+                    </div>
                     <div id="shelterCards" class="shelter-cards">
                         <!-- Shelter cards will be populated here -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- Predictions Section -->
-            <section id="predictions" class="dashboard-section">
-                <div class="section-header">
-                    <h1>Predictions</h1>
-                    <p>AI-powered occupancy forecasts</p>
-                </div>
-                
-                <div class="prediction-controls">
-                    <div class="form-group">
-                        <label for="predictionDate">Date</label>
-                        <input type="date" id="predictionDate">
-                    </div>
-                    <div class="form-group">
-                        <label for="predictionShelter">Shelter</label>
-                        <select id="predictionShelter">
-                            <option value="">Select a shelter</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-primary" onclick="makePrediction()">
-                        Get Prediction
-                    </button>
-                </div>
-
-                <div id="predictionResult" class="prediction-result" style="display: none;">
-                    <h3>Prediction Result</h3>
-                    <div class="prediction-card">
-                        <div class="prediction-info">
-                            <span id="predictionShelterName"></span>
-                            <span id="predictionDateDisplay"></span>
-                        </div>
-                        <div class="prediction-number">
-                            <span id="predictionValue">0</span>
-                            <span class="prediction-label">predicted visitors</span>
-                        </div>
                     </div>
                 </div>
             </section>
@@ -155,7 +136,11 @@
             <section id="shelters" class="dashboard-section">
                 <div class="section-header">
                     <h1>Shelter Management</h1>
-                    <p>Manage and monitor all shelters</p>
+                    <p>Manage and monitor all your shelters</p>
+                    <button class="btn btn-primary" onclick="showAddShelterModal()">
+                        <i class="fas fa-plus"></i>
+                        Add New Shelter
+                    </button>
                 </div>
                 
                 <div class="shelter-management">
@@ -174,53 +159,46 @@
                 </div>
             </section>
 
-            <!-- Resources Section -->
-            <section id="resources" class="dashboard-section">
+            <!-- Data Entry Section -->
+            <section id="data-entry" class="dashboard-section">
                 <div class="section-header">
-                    <h1>Resource Management</h1>
-                    <p>Optimize resource allocation</p>
+                    <h1>Data Entry</h1>
+                    <p>Enter real occupancy data for your shelters</p>
                 </div>
                 
-                <div class="resource-grid">
-                    <div class="resource-card">
-                        <h3>Beds</h3>
-                        <div class="resource-stats">
-                            <div class="resource-stat">
-                                <span class="resource-number" id="totalBeds">0</span>
-                                <span class="resource-label">Total Available</span>
+                <div class="data-entry-container">
+                    <div class="data-entry-form">
+                        <h3>Add Occupancy Data</h3>
+                        <form id="dataEntryForm">
+                            <div class="form-group">
+                                <label for="dataShelter">Shelter</label>
+                                <select id="dataShelter" required>
+                                    <option value="">Select a shelter</option>
+                                </select>
                             </div>
-                            <div class="resource-stat">
-                                <span class="resource-number" id="allocatedBeds">0</span>
-                                <span class="resource-label">Allocated</span>
+                            <div class="form-group">
+                                <label for="dataDate">Date</label>
+                                <input type="date" id="dataDate" required>
                             </div>
-                        </div>
+                            <div class="form-group">
+                                <label for="dataOccupancy">Occupancy</label>
+                                <input type="number" id="dataOccupancy" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="dataNotes">Notes (Optional)</label>
+                                <textarea id="dataNotes" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Save Data
+                            </button>
+                        </form>
                     </div>
                     
-                    <div class="resource-card">
-                        <h3>Staff</h3>
-                        <div class="resource-stats">
-                            <div class="resource-stat">
-                                <span class="resource-number" id="totalStaff">0</span>
-                                <span class="resource-label">Total Staff</span>
-                            </div>
-                            <div class="resource-stat">
-                                <span class="resource-number" id="onDutyStaff">0</span>
-                                <span class="resource-label">On Duty</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="resource-card">
-                        <h3>Supplies</h3>
-                        <div class="resource-stats">
-                            <div class="resource-stat">
-                                <span class="resource-number" id="foodSupplies">0</span>
-                                <span class="resource-label">Food Meals</span>
-                            </div>
-                            <div class="resource-stat">
-                                <span class="resource-number" id="medicalSupplies">0</span>
-                                <span class="resource-label">Medical Kits</span>
-                            </div>
+                    <div class="data-history">
+                        <h3>Recent Data</h3>
+                        <div id="dataHistory" class="data-history-list">
+                            <!-- Data history will be populated here -->
                         </div>
                     </div>
                 </div>
@@ -237,7 +215,106 @@
                     <!-- Alerts will be populated here -->
                 </div>
             </section>
+
+            <!-- Map Section -->
+            <section id="map" class="dashboard-section">
+                <div class="section-header">
+                    <h1>Map View</h1>
+                    <p>View all your shelters on a map</p>
+                </div>
+                
+                <div id="mapContainer" class="map-container">
+                    <!-- Google Maps will be loaded here -->
+                </div>
+            </section>
         </main>
+    </div>
+
+    <!-- Add Shelter Modal -->
+    <div id="addShelterModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Shelter</h2>
+                <span class="close" onclick="closeAddShelterModal()">&times;</span>
+            </div>
+            <form id="addShelterForm">
+                <div class="form-group">
+                    <label for="shelterName">Shelter Name *</label>
+                    <input type="text" id="shelterName" required>
+                </div>
+                <div class="form-group">
+                    <label for="shelterAddress">Address *</label>
+                    <input type="text" id="shelterAddress" required>
+                </div>
+                <div class="form-group">
+                    <label for="shelterMaxCapacity">Maximum Capacity *</label>
+                    <input type="number" id="shelterMaxCapacity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="shelterPhone">Phone Number</label>
+                    <input type="tel" id="shelterPhone">
+                </div>
+                <div class="form-group">
+                    <label for="shelterEmail">Email</label>
+                    <input type="email" id="shelterEmail">
+                </div>
+                <div class="form-group">
+                    <label for="shelterDescription">Description</label>
+                    <textarea id="shelterDescription" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeAddShelterModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Add Shelter
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Shelter Modal -->
+    <div id="editShelterModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Shelter</h2>
+                <span class="close" onclick="closeEditShelterModal()">&times;</span>
+            </div>
+            <form id="editShelterForm">
+                <input type="hidden" id="editShelterId">
+                <div class="form-group">
+                    <label for="editShelterName">Shelter Name *</label>
+                    <input type="text" id="editShelterName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editShelterAddress">Address *</label>
+                    <input type="text" id="editShelterAddress" required>
+                </div>
+                <div class="form-group">
+                    <label for="editShelterMaxCapacity">Maximum Capacity *</label>
+                    <input type="number" id="editShelterMaxCapacity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="editShelterPhone">Phone Number</label>
+                    <input type="tel" id="editShelterPhone">
+                </div>
+                <div class="form-group">
+                    <label for="editShelterEmail">Email</label>
+                    <input type="email" id="editShelterEmail">
+                </div>
+                <div class="form-group">
+                    <label for="editShelterDescription">Description</label>
+                    <textarea id="editShelterDescription" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeEditShelterModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Update Shelter
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script src="../js/auth.js"></script>
