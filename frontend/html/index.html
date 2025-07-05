@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShelterFlow - Smart Shelter Management</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-home"></i>
+                <span>ShelterFlow</span>
+            </div>
+            <div class="nav-buttons">
+                <button class="btn btn-outline" onclick="showLoginModal()">Sign In</button>
+                <button class="btn btn-primary" onclick="showRegisterModal()">Sign Up</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Smart Shelter Management</h1>
+                <p class="hero-subtitle">AI-powered occupancy prediction and resource optimization for homeless shelters</p>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">6.98</span>
+                        <span class="stat-label">MAE Accuracy</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">65</span>
+                        <span class="stat-label">Shelters Supported</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">94.5%</span>
+                        <span class="stat-label">Prediction Accuracy</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-large" onclick="showRegisterModal()">
+                    Get Started
+                </button>
+            </div>
+            <div class="hero-image">
+                <div class="dashboard-preview">
+                    <div class="preview-header">
+                        <div class="preview-dot red"></div>
+                        <div class="preview-dot yellow"></div>
+                        <div class="preview-dot green"></div>
+                    </div>
+                    <div class="preview-content">
+                        <div class="preview-chart"></div>
+                        <div class="preview-stats">
+                            <div class="preview-stat">
+                                <span class="preview-number">127</span>
+                                <span class="preview-label">Predicted Today</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="problem-section">
+        <div class="container">
+            <h2>🔍 The Problem</h2>
+            <div class="problem-grid">
+                <div class="problem-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Fluctuating Demand</h3>
+                    <p>Unpredictable bed usage across locations makes resource planning difficult</p>
+                </div>
+                <div class="problem-card">
+                    <i class="fas fa-network-wired"></i>
+                    <h3>Poor Coordination</h3>
+                    <p>Limited real-time communication between shelters leads to inefficiencies</p>
+                </div>
+                <div class="problem-card">
+                    <i class="fas fa-balance-scale"></i>
+                    <h3>Resource Waste</h3>
+                    <p>Unused beds in one place while others overflow</p>
+                </div>
+                <div class="problem-card">
+                    <i class="fas fa-database"></i>
+                    <h3>No Data-Driven Planning</h3>
+                    <p>Lack of centralized tools for informed decision making</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section class="solution-section">
+        <div class="container">
+            <h2>💡 Our Solution</h2>
+            <div class="solution-grid">
+                <div class="solution-card">
+                    <div class="solution-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>AI-Powered Forecasting</h3>
+                    <p>Advanced machine learning models predict daily occupancy with 94.5% accuracy using historical data, weather patterns, and seasonal trends.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h3>Resource Optimization</h3>
+                    <p>Smart algorithms reallocate beds, staff, and supplies across shelters based on predicted demand.</p>
+                </div>
+                <div class="solution-card">
+                    <div class="solution-icon">
+                        <i class="fas fa-desktop"></i>
+                    </div>
+                    <h3>Real-Time Dashboard</h3>
+                    <p>Live monitoring system showing current and forecasted occupancy with urgent alerts and recommendations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <h2>🔧 Core Features</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-number">01</div>
+                    <div class="feature-content">
+                        <h3>Occupancy Forecasting</h3>
+                        <p>LSTM neural networks analyze historical patterns to predict daily bed usage with high accuracy</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-number">02</div>
+                    <div class="feature-content">
+                        <h3>Resource Balancing</h3>
+                        <p>Optimization algorithms automatically redistribute resources based on predicted demand</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-number">03</div>
+                    <div class="feature-content">
+                        <h3>Live Dashboard</h3>
+                        <p>Real-time visualization of occupancy trends, alerts, and resource recommendations</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Transform Your Shelter Operations?</h2>
+            <p>Join leading shelters in Toronto using AI to optimize their services</p>
+            <button class="btn btn-primary btn-large" onclick="showRegisterModal()">
+                Start Free Trial
+            </button>
+        </div>
+    </section>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">&times;</span>
+            <h2>Sign In</h2>
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Sign In</button>
+            </form>
+            <p class="auth-switch">
+                Don't have an account? <a href="#" onclick="switchToRegister()">Sign up</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">&times;</span>
+            <h2>Sign Up</h2>
+            <form id="registerForm" class="auth-form">
+                <div class="form-group">
+                    <label for="registerUsername">Username</label>
+                    <input type="text" id="registerUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Sign Up</button>
+            </form>
+            <p class="auth-switch">
+                Already have an account? <a href="#" onclick="switchToLogin()">Sign in</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/main.js"></script>
+</body>
+</html> 

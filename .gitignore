@@ -12,9 +12,6 @@ __pycache__/
 *.pkl
 *.egg-info/
 
-# ML models
-ml_service/models/
-
 # VSCode
 .vscode/
 .DS_Store

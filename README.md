@@ -1,52 +1,55 @@
-# Shelter Management Dashboard
+# ShelterFlow - AI-Powered Shelter Management
 
-A comprehensive web application for homeless shelter management with AI-powered predictions for occupancy and resource planning.
+A comprehensive web application that uses machine learning to predict shelter occupancy and optimize resource allocation for homeless shelters in Toronto.
 
-## Features
+## 🌟 Features
 
-- **Real-time Analytics**: Monitor shelter occupancy, utilization rates, and trends
-- **AI Predictions**: ML-powered forecasts for future occupancy and resource needs  
-- **Resource Planning**: Optimize meals, kits, and staff allocation
-- **User Management**: Secure authentication with role-based access
-- **Modern UI**: Clean, responsive dashboard built with HTML/CSS/JS
+### 🔍 Problem Solved
+- **Fluctuating Demand**: Unpredictable bed usage across locations
+- **Poor Coordination**: Limited real-time communication between shelters  
+- **Resource Waste**: Unused beds in one place while others overflow
+- **No Data-Driven Planning**: Lack of centralized tools for informed decisions
 
-## Tech Stack
+### 💡 Solution
+- **AI-Powered Forecasting**: LSTM neural networks with 94.5% accuracy
+- **Resource Optimization**: Smart algorithms for bed, staff, and supply allocation
+- **Real-Time Dashboard**: Live monitoring with alerts and recommendations
 
-- **Frontend**: HTML, CSS, JavaScript (Vanilla)
-- **Backend**: Node.js, Express, MongoDB
-- **ML Service**: Python, FastAPI, PyTorch
-- **Charts**: Chart.js
-- **Authentication**: JWT tokens
-
-## Project Structure
+## 🏗️ Architecture
 
 ```
 hack404/
-├── data/                   # Shelter data files
-├── ml_service/            # Python ML service
-│   ├── app.py            # FastAPI application
-│   ├── model.py          # PyTorch neural network
-│   ├── train.py          # Training script
-│   └── requirements.txt  # Python dependencies
-├── models/               # MongoDB schemas
-├── routes/              # Express API routes
-├── middleware/          # Authentication middleware
-├── public/              # Static frontend files
+├── frontend/                    # HTML/CSS/JS frontend
+│   ├── html/
+│   │   ├── index.html          # Home page with product info
+│   │   └── dashboard.html      # Dashboard interface
 │   ├── css/
-│   ├── js/
-│   └── index.html
-├── server.js            # Express server
-├── package.json         # Node.js dependencies
-└── .env.example         # Environment variables template
+│   │   ├── style.css          # Main styling
+│   │   └── dashboard.css      # Dashboard styling
+│   └── js/
+│       ├── auth.js            # Authentication logic
+│       ├── main.js            # Home page functionality
+│       └── dashboard.js       # Dashboard functionality
+├── backend/
+│   ├── server/                # Node.js backend
+│   │   ├── server.js         # Express server with auth
+│   │   └── package.json      # Node.js dependencies
+│   └── prediction/           # Python ML prediction system
+│       ├── models/           # Trained models & parameters
+│       ├── shelter_predictor.py  # Core prediction class
+│       ├── api.py            # Flask API (optional)
+│       └── requirements.txt  # Python dependencies
+├── data/                     # Historical shelter data
+├── package.json              # Main project configuration
+└── README.md                # This file
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
-
 - Node.js 16+
 - Python 3.8+
-- MongoDB (local or cloud)
+- pip
 
 ### Installation
 
@@ -56,119 +59,140 @@ hack404/
    cd hack404
    ```
 
-2. **Install Node.js dependencies**
+2. **Install dependencies**
    ```bash
-   npm install
+   npm run install-deps
    ```
 
-3. **Install Python dependencies**
-   ```bash
-   cd ml_service
-   pip install -r requirements.txt
-   cd ..
-   ```
-
-4. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-5. **Start the application**
+3. **Start the application**
    ```bash
    npm start
    ```
 
-### Environment Variables
+4. **Access the application**
+   - Home page: http://localhost:3000
+   - Dashboard: http://localhost:3000/dashboard (after login)
 
-Create a `.env` file in the root directory:
+## 📊 Model Performance
 
-```env
-# Node.js backend
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/shelter_dashboard
-JWT_SECRET=your_jwt_secret_here
-NODE_ENV=development
-ML_SERVICE_URL=http://localhost:5000
-```
+- **MAE**: 6.98 people
+- **RMSE**: 19.81 people
+- **R² Score**: 0.9454
+- **Training Data**: 91,216 sequences
+- **Test Data**: 22,804 sequences
 
-## API Endpoints
+## 🎯 Core Functionalities
 
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user
+### 1. Occupancy Forecasting
+- LSTM neural networks analyze historical patterns
+- Predicts daily bed usage with high accuracy
+- Considers weather, seasonality, and temporal patterns
 
-### Shelters
-- `GET /api/shelters` - Get all shelters
-- `GET /api/shelters/:id` - Get shelter by ID
-- `GET /api/shelters/:id/stats` - Get shelter statistics
-- `GET /api/shelters/stats/overview` - Get overview statistics
+### 2. Resource Balancing Engine
+- Linear programming optimization
+- Reallocates beds, food, staff across shelters
+- Based on predicted demand and current capacity
 
-### Predictions
-- `GET /api/predictions/shelter/:id` - Get shelter predictions
-- `GET /api/predictions/overview` - Get overview predictions
-- `GET /api/predictions/resources/:id` - Get resource predictions
+### 3. Live Dashboard
+- Real-time occupancy visualization
+- Urgent alerts and notifications
+- Resource allocation recommendations
+- Interactive shelter management
 
-## ML Service
+## 🔐 Authentication
 
-The ML service runs on port 5000 and provides:
+The application includes:
+- User registration and login
+- JWT token-based authentication
+- Secure password hashing with bcrypt
+- Protected API endpoints
 
-- **Model Training**: Custom PyTorch LSTM model
-- **Predictions**: Occupancy and resource forecasting
-- **API**: FastAPI endpoints for predictions
+## 🎨 User Interface
 
-### Training the Model
+### Home Page
+- Product description and problem statement
+- Interactive statistics and animations
+- Sign up/Sign in modals
+- Responsive design
 
-```bash
-cd ml_service
-python train.py --epochs 100 --learning-rate 0.001
-```
+### Dashboard
+- Overview with key metrics
+- Individual shelter predictions
+- Resource management interface
+- Alerts and notifications system
 
-### Running ML Service
-
-```bash
-cd ml_service
-python app.py
-```
-
-## Deployment
+## 🚀 Deployment
 
 ### Render Deployment
+The application is configured for easy deployment on Render:
 
-1. **Connect your repository to Render**
-2. **Set build command**: `npm install`
-3. **Set start command**: `npm start`
-4. **Add environment variables**:
-   - `MONGODB_URI`
-   - `JWT_SECRET`
-   - `NODE_ENV=production`
+**Build Command:**
+```bash
+npm install
+```
 
-### ML Service Deployment
+**Start Command:**
+```bash
+npm start
+```
 
-Deploy the ML service separately on Render:
+### Environment Variables
+Create a `.env` file in the root directory:
+```
+JWT_SECRET=your-secret-key-here
+PORT=3000
+```
 
-1. **Create a new Web Service**
-2. **Set build command**: `pip install -r requirements.txt`
-3. **Set start command**: `python app.py`
-4. **Set environment variables**:
-   - `PORT=5000`
+## 🔧 API Endpoints
 
-## Data
+### Authentication
+- `POST /api/register` - User registration
+- `POST /api/login` - User login
 
-The application uses real shelter occupancy data from 2017-2020, including:
+### Dashboard
+- `GET /api/dashboard` - Get dashboard data
+- `GET /api/shelters` - Get available shelters
+- `POST /api/predict` - Make occupancy prediction
 
-- 66 shelters
-- 3.6M+ occupancy records
-- 92.6% average utilization rate
+## 📈 Technology Stack
 
-## Contributing
+### Frontend
+- **HTML5/CSS3**: Modern, responsive design
+- **JavaScript**: Interactive functionality
+- **Font Awesome**: Icons and UI elements
+- **Google Fonts**: Typography
+
+### Backend
+- **Node.js**: Server runtime
+- **Express.js**: Web framework
+- **JWT**: Authentication
+- **bcryptjs**: Password hashing
+- **python-shell**: Python integration
+
+### Machine Learning
+- **TensorFlow**: Deep learning framework
+- **LSTM**: Neural network architecture
+- **scikit-learn**: Data preprocessing
+- **pandas/numpy**: Data manipulation
+
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Submit a pull request
+4. Add tests if applicable
+5. Submit a pull request
 
-## License
+## 📄 License
 
-MIT License 
+This project is licensed under the MIT License.
+
+## 🙏 Acknowledgments
+
+- Toronto Open Data for shelter occupancy data
+- TensorFlow team for the deep learning framework
+- The homeless shelter community for inspiration
+
+---
+
+**Built with ❤️ for better shelter management** 

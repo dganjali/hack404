@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ShelterFlow</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-home"></i>
+                <span>ShelterFlow</span>
+            </div>
+            <div class="nav-user">
+                <span id="userEmail"></span>
+                <button class="btn btn-outline" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Navigation</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#overview" class="nav-item active" onclick="showSection('overview')">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Overview</span>
+                </a>
+                <a href="#predictions" class="nav-item" onclick="showSection('predictions')">
+                    <i class="fas fa-crystal-ball"></i>
+                    <span>Predictions</span>
+                </a>
+                <a href="#shelters" class="nav-item" onclick="showSection('shelters')">
+                    <i class="fas fa-building"></i>
+                    <span>Shelters</span>
+                </a>
+                <a href="#resources" class="nav-item" onclick="showSection('resources')">
+                    <i class="fas fa-boxes"></i>
+                    <span>Resources</span>
+                </a>
+                <a href="#alerts" class="nav-item" onclick="showSection('alerts')">
+                    <i class="fas fa-bell"></i>
+                    <span>Alerts</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Overview Section -->
+            <section id="overview" class="dashboard-section active">
+                <div class="section-header">
+                    <h1>Dashboard Overview</h1>
+                    <p id="currentDate"></p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalPredicted">0</h3>
+                            <p>Total Predicted Today</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalCapacity">0</h3>
+                            <p>Total Capacity</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="utilizationRate">0%</h3>
+                            <p>Utilization Rate</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="alertsCount">0</h3>
+                            <p>Active Alerts</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shelter List -->
+                <div class="shelter-list">
+                    <h2>Shelter Predictions</h2>
+                    <div id="shelterCards" class="shelter-cards">
+                        <!-- Shelter cards will be populated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Predictions Section -->
+            <section id="predictions" class="dashboard-section">
+                <div class="section-header">
+                    <h1>Predictions</h1>
+                    <p>AI-powered occupancy forecasts</p>
+                </div>
+                
+                <div class="prediction-controls">
+                    <div class="form-group">
+                        <label for="predictionDate">Date</label>
+                        <input type="date" id="predictionDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="predictionShelter">Shelter</label>
+                        <select id="predictionShelter">
+                            <option value="">Select a shelter</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="makePrediction()">
+                        Get Prediction
+                    </button>
+                </div>
+
+                <div id="predictionResult" class="prediction-result" style="display: none;">
+                    <h3>Prediction Result</h3>
+                    <div class="prediction-card">
+                        <div class="prediction-info">
+                            <span id="predictionShelterName"></span>
+                            <span id="predictionDateDisplay"></span>
+                        </div>
+                        <div class="prediction-number">
+                            <span id="predictionValue">0</span>
+                            <span class="prediction-label">predicted visitors</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Shelters Section -->
+            <section id="shelters" class="dashboard-section">
+                <div class="section-header">
+                    <h1>Shelter Management</h1>
+                    <p>Manage and monitor all shelters</p>
+                </div>
+                
+                <div class="shelter-management">
+                    <div class="shelter-filters">
+                        <input type="text" placeholder="Search shelters..." id="shelterSearch">
+                        <select id="shelterFilter">
+                            <option value="">All Shelters</option>
+                            <option value="high">High Utilization</option>
+                            <option value="low">Low Utilization</option>
+                        </select>
+                    </div>
+                    
+                    <div id="shelterTable" class="shelter-table">
+                        <!-- Shelter table will be populated here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Resources Section -->
+            <section id="resources" class="dashboard-section">
+                <div class="section-header">
+                    <h1>Resource Management</h1>
+                    <p>Optimize resource allocation</p>
+                </div>
+                
+                <div class="resource-grid">
+                    <div class="resource-card">
+                        <h3>Beds</h3>
+                        <div class="resource-stats">
+                            <div class="resource-stat">
+                                <span class="resource-number" id="totalBeds">0</span>
+                                <span class="resource-label">Total Available</span>
+                            </div>
+                            <div class="resource-stat">
+                                <span class="resource-number" id="allocatedBeds">0</span>
+                                <span class="resource-label">Allocated</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="resource-card">
+                        <h3>Staff</h3>
+                        <div class="resource-stats">
+                            <div class="resource-stat">
+                                <span class="resource-number" id="totalStaff">0</span>
+                                <span class="resource-label">Total Staff</span>
+                            </div>
+                            <div class="resource-stat">
+                                <span class="resource-number" id="onDutyStaff">0</span>
+                                <span class="resource-label">On Duty</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="resource-card">
+                        <h3>Supplies</h3>
+                        <div class="resource-stats">
+                            <div class="resource-stat">
+                                <span class="resource-number" id="foodSupplies">0</span>
+                                <span class="resource-label">Food Meals</span>
+                            </div>
+                            <div class="resource-stat">
+                                <span class="resource-number" id="medicalSupplies">0</span>
+                                <span class="resource-label">Medical Kits</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Alerts Section -->
+            <section id="alerts" class="dashboard-section">
+                <div class="section-header">
+                    <h1>Alerts & Notifications</h1>
+                    <p>Stay informed about critical issues</p>
+                </div>
+                
+                <div id="alertsList" class="alerts-list">
+                    <!-- Alerts will be populated here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="../js/auth.js"></script>
+    <script src="../js/dashboard.js"></script>
+</body>
+</html> 

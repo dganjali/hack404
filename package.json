@@ -1,25 +1,21 @@
 {
-  "name": "shelter-dashboard",
+  "name": "shelterflow",
   "version": "1.0.0",
-  "description": "Homeless Shelter Management Dashboard with ML Predictions",
-  "main": "server.js",
+  "description": "AI-powered shelter occupancy prediction and resource management system",
+  "main": "backend/server/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "build": "npm install",
-    "install-deps": "npm install && cd ml_service && pip install -r requirements.txt"
+    "start": "node backend/server/server.js",
+    "dev": "nodemon backend/server/server.js",
+    "install-deps": "npm install && cd backend/server && npm install && cd ../../backend/prediction && pip install -r requirements.txt"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "mongoose": "^7.5.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "helmet": "^7.0.0",
-    "express-rate-limit": "^6.10.0",
-    "compression": "^1.7.4",
-    "axios": "^1.6.0"
+    "python-shell": "^5.0.0",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
@@ -27,13 +23,18 @@
   "engines": {
     "node": ">=16.0.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/shelterflow.git"
+  },
   "keywords": [
     "shelter",
-    "dashboard",
-    "ml",
     "prediction",
-    "homeless"
+    "ai",
+    "machine-learning",
+    "homeless",
+    "resource-management"
   ],
-  "author": "Shelter Dashboard Team",
+  "author": "Your Name",
   "license": "MIT"
 } 

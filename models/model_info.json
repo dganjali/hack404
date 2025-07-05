@@ -1,0 +1,25 @@
+{
+  "model_type": "lstm",
+  "sequence_length": 30,
+  "n_features": 23,
+  "best_mae": 6.979702148766209,
+  "training_date": "2025-07-05T03:03:01.755621",
+  "data_shape": {
+    "X_train": [
+      91216,
+      30,
+      23
+    ],
+    "X_test": [
+      22804,
+      30,
+      23
+    ],
+    "y_train": [
+      91216
+    ],
+    "y_test": [
+      22804
+    ]
+  }
+}
