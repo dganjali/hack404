@@ -190,9 +190,5 @@ This project is licensed under the MIT License.
 ## 🙏 Acknowledgments
 
 - Toronto Open Data for shelter occupancy data
-- TensorFlow team for the deep learning framework
-- The homeless shelter community for inspiration
-
----
 
 **Built with ❤️ for better shelter management** 

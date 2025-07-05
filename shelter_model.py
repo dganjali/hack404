@@ -1,289 +1,394 @@
-import tensorflow as tf
-from tensorflow import keras
 import numpy as np
+import pandas as pd
+import tensorflow as tf
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import LSTM, Dense, Dropout, Conv1D, MaxPooling1D, Flatten, Input, Attention, Concatenate
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+import matplotlib.pyplot as plt
+import joblib
 import os
+from datetime import datetime, timedelta
+import holidays
 
-layers = keras.layers
-models = keras.models
-callbacks = keras.callbacks
-
-class ShelterOccupancyModel:
-    def __init__(self, sequence_length=30, n_features=25, n_shelters=None):
-        self.sequence_length = sequence_length
-        self.n_features = n_features
-        self.n_shelters = n_shelters
+class ShelterPredictionModel:
+    def __init__(self, model_type='lstm'):
+        self.model_type = model_type
         self.model = None
+        self.scaler = None
+        self.canada_holidays = holidays.Canada()
+        self.feature_names = None
+        self.sequence_length = 7
         
-    def build_model(self):
-        """Build the deep learning model"""
+    def create_lstm_model(self, input_shape):
+        """Create LSTM model for time series prediction"""
+        model = Sequential([
+            LSTM(128, return_sequences=True, input_shape=input_shape),
+            Dropout(0.2),
+            LSTM(64, return_sequences=False),
+            Dropout(0.2),
+            Dense(32, activation='relu'),
+            Dropout(0.1),
+            Dense(1, activation='linear')
+        ])
         
-        # Input layer
-        input_layer = layers.Input(shape=(self.sequence_length, self.n_features))
-        
-        # LSTM layers with dropout
-        lstm1 = layers.LSTM(128, return_sequences=True, dropout=0.2)(input_layer)
-        lstm2 = layers.LSTM(64, return_sequences=True, dropout=0.2)(lstm1)
-        lstm3 = layers.LSTM(32, return_sequences=False, dropout=0.2)(lstm2)
-        
-        # Dense layers
-        dense1 = layers.Dense(64, activation='relu')(lstm3)
-        dropout1 = layers.Dropout(0.3)(dense1)
-        
-        dense2 = layers.Dense(32, activation='relu')(dropout1)
-        dropout2 = layers.Dropout(0.3)(dense2)
-        
-        # Output layer
-        output_layer = layers.Dense(1, activation='linear')(dropout2)
-        
-        # Create model
-        self.model = models.Model(inputs=input_layer, outputs=output_layer)
-        
-        # Compile model
-        self.model.compile(
-            optimizer='adam',
+        model.compile(
+            optimizer=Adam(learning_rate=0.001),
             loss='mse',
             metrics=['mae']
         )
         
-        return self.model
+        return model
     
-    def build_attention_model(self):
-        """Build model with attention mechanism"""
+    def create_conv_lstm_model(self, input_shape):
+        """Create CNN-LSTM model for time series prediction"""
+        model = Sequential([
+            Conv1D(filters=64, kernel_size=3, activation='relu', input_shape=input_shape),
+            MaxPooling1D(pool_size=2),
+            Conv1D(filters=32, kernel_size=3, activation='relu'),
+            MaxPooling1D(pool_size=2),
+            LSTM(64, return_sequences=True),
+            Dropout(0.2),
+            LSTM(32, return_sequences=False),
+            Dropout(0.2),
+            Dense(16, activation='relu'),
+            Dense(1, activation='linear')
+        ])
         
-        # Input layer
-        input_layer = layers.Input(shape=(self.sequence_length, self.n_features))
+        model.compile(
+            optimizer=Adam(learning_rate=0.001),
+            loss='mse',
+            metrics=['mae']
+        )
         
-        # LSTM layers
-        lstm1 = layers.LSTM(128, return_sequences=True, dropout=0.2)(input_layer)
-        lstm2 = layers.LSTM(64, return_sequences=True, dropout=0.2)(lstm1)
+        return model
+    
+    def create_attention_model(self, input_shape):
+        """Create attention-based model for time series prediction"""
+        inputs = Input(shape=input_shape)
+        
+        # LSTM layers with attention
+        lstm1 = LSTM(64, return_sequences=True)(inputs)
+        lstm2 = LSTM(32, return_sequences=True)(lstm1)
         
         # Attention mechanism
-        attention = layers.Attention()([lstm2, lstm2])
+        attention = tf.keras.layers.MultiHeadAttention(
+            num_heads=4, key_dim=8
+        )(lstm2, lstm2)
         
-        # Global average pooling
-        pooled = layers.GlobalAveragePooling1D()(attention)
+        # Combine attention with LSTM output
+        concat = Concatenate()([lstm2, attention])
         
-        # Dense layers
-        dense1 = layers.Dense(64, activation='relu')(pooled)
-        dropout1 = layers.Dropout(0.3)(dense1)
+        # Final layers
+        lstm3 = LSTM(16, return_sequences=False)(concat)
+        dense1 = Dense(16, activation='relu')(lstm3)
+        dropout = Dropout(0.2)(dense1)
+        outputs = Dense(1, activation='linear')(dropout)
         
-        dense2 = layers.Dense(32, activation='relu')(dropout1)
-        dropout2 = layers.Dropout(0.3)(dense2)
-        
-        # Output layer
-        output_layer = layers.Dense(1, activation='linear')(dropout2)
-        
-        # Create model
-        self.model = models.Model(inputs=input_layer, outputs=output_layer)
-        
-        # Compile model
-        self.model.compile(
-            optimizer='adam',
+        model = Model(inputs=inputs, outputs=outputs)
+        model.compile(
+            optimizer=Adam(learning_rate=0.001),
             loss='mse',
             metrics=['mae']
         )
         
-        return self.model
+        return model
     
-    def build_conv_lstm_model(self):
-        """Build model with 1D CNN + LSTM"""
+    def train_model(self, X_train, y_train, X_val=None, y_val=None, epochs=100, batch_size=32):
+        """Train the model"""
+        print(f"Training {self.model_type.upper()} model...")
         
-        # Input layer
-        input_layer = layers.Input(shape=(self.sequence_length, self.n_features))
+        # Create model based on type
+        if self.model_type == 'lstm':
+            self.model = self.create_lstm_model((X_train.shape[1], X_train.shape[2]))
+        elif self.model_type == 'conv_lstm':
+            self.model = self.create_conv_lstm_model((X_train.shape[1], X_train.shape[2]))
+        elif self.model_type == 'attention':
+            self.model = self.create_attention_model((X_train.shape[1], X_train.shape[2]))
+        else:
+            raise ValueError(f"Unknown model type: {self.model_type}")
         
-        # 1D CNN layers
-        conv1 = layers.Conv1D(filters=64, kernel_size=3, activation='relu')(input_layer)
-        conv2 = layers.Conv1D(filters=64, kernel_size=3, activation='relu')(conv1)
-        maxpool = layers.MaxPooling1D(pool_size=2)(conv2)
-        
-        # LSTM layers
-        lstm1 = layers.LSTM(128, return_sequences=True, dropout=0.2)(maxpool)
-        lstm2 = layers.LSTM(64, return_sequences=False, dropout=0.2)(lstm1)
-        
-        # Dense layers
-        dense1 = layers.Dense(64, activation='relu')(lstm2)
-        dropout1 = layers.Dropout(0.3)(dense1)
-        
-        dense2 = layers.Dense(32, activation='relu')(dropout1)
-        dropout2 = layers.Dropout(0.3)(dense2)
-        
-        # Output layer
-        output_layer = layers.Dense(1, activation='linear')(dropout2)
-        
-        # Create model
-        self.model = models.Model(inputs=input_layer, outputs=output_layer)
-        
-        # Compile model
-        self.model.compile(
-            optimizer='adam',
-            loss='mse',
-            metrics=['mae']
-        )
-        
-        return self.model
-    
-    def get_callbacks(self, model_save_path='models/shelter_model.h5'):
-        """Get training callbacks"""
-        os.makedirs(os.path.dirname(model_save_path), exist_ok=True)
-        
-        callbacks_list = [
-            callbacks.EarlyStopping(
-                monitor='val_loss',
-                patience=10,
-                restore_best_weights=True
-            ),
-            callbacks.ReduceLROnPlateau(
-                monitor='val_loss',
-                factor=0.5,
-                patience=5,
-                min_lr=1e-7
-            ),
-            callbacks.ModelCheckpoint(
-                filepath=model_save_path,
-                monitor='val_loss',
-                save_best_only=True,
-                save_weights_only=False
-            )
+        # Callbacks
+        callbacks = [
+            EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True),
+            ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=10, min_lr=1e-6),
+            ModelCheckpoint('best_model.h5', monitor='val_loss', save_best_only=True)
         ]
         
-        return callbacks_list
-    
-    def train(self, X_train, y_train, X_val, y_val, 
-              epochs=100, batch_size=32, model_type='lstm'):
-        """Train the model"""
-        
-        if model_type == 'attention':
-            self.build_attention_model()
-        elif model_type == 'conv_lstm':
-            self.build_conv_lstm_model()
+        # Training
+        if X_val is not None and y_val is not None:
+            history = self.model.fit(
+                X_train, y_train,
+                validation_data=(X_val, y_val),
+                epochs=epochs,
+                batch_size=batch_size,
+                callbacks=callbacks,
+                verbose=1
+            )
         else:
-            self.build_model()
-        
-        callbacks_list = self.get_callbacks()
-        
-        # Train the model
-        history = self.model.fit(
-            X_train, y_train,
-            validation_data=(X_val, y_val),
-            epochs=epochs,
-            batch_size=batch_size,
-            callbacks=callbacks_list,
-            verbose=1
-        )
+            history = self.model.fit(
+                X_train, y_train,
+                epochs=epochs,
+                batch_size=batch_size,
+                callbacks=callbacks,
+                verbose=1
+            )
         
         return history
     
-    def predict(self, X):
-        """Make predictions"""
-        if self.model is None:
-            raise ValueError("Model not trained yet. Call train() first.")
-        
-        return self.model.predict(X)
-    
-    def evaluate(self, X_test, y_test):
+    def evaluate_model(self, X_test, y_test):
         """Evaluate the model"""
-        if self.model is None:
-            raise ValueError("Model not trained yet. Call train() first.")
+        print("Evaluating model...")
         
-        loss, mae = self.model.evaluate(X_test, y_test, verbose=0)
-        return {'loss': loss, 'mae': mae}
-    
-    def save_model(self, filepath='models/shelter_model.h5'):
-        """Save the trained model"""
-        if self.model is None:
-            raise ValueError("Model not trained yet. Call train() first.")
+        y_pred = self.model.predict(X_test)
         
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        self.model.save(filepath)
-        print(f"Model saved to {filepath}")
+        # Calculate metrics
+        mae = mean_absolute_error(y_test, y_pred)
+        mse = mean_squared_error(y_test, y_pred)
+        rmse = np.sqrt(mse)
+        r2 = r2_score(y_test, y_pred)
+        
+        print(f"MAE: {mae:.2f}")
+        print(f"MSE: {mse:.2f}")
+        print(f"RMSE: {rmse:.2f}")
+        print(f"R²: {r2:.4f}")
+        
+        return {
+            'mae': mae,
+            'mse': mse,
+            'rmse': rmse,
+            'r2': r2,
+            'predictions': y_pred.flatten(),
+            'actual': y_test
+        }
     
-    def load_model(self, filepath='models/shelter_model.h5'):
-        """Load a trained model"""
-        self.model = models.load_model(filepath)
-        print(f"Model loaded from {filepath}")
-
-class ShelterPredictor:
-    def __init__(self, model_path='models/shelter_model.h5', preprocessor_path='models'):
-        self.model = None
-        self.preprocessor = None
-        self.load_model_and_preprocessor(model_path, preprocessor_path)
-    
-    def load_model_and_preprocessor(self, model_path, preprocessor_path):
-        """Load the trained model and preprocessors"""
-        try:
-            # Load model
-            self.model = models.load_model(model_path)
-            print(f"Model loaded from {model_path}")
+    def predict_future(self, last_sequence, days_ahead=7):
+        """Predict future occupancy for the next N days"""
+        print(f"Predicting occupancy for next {days_ahead} days...")
+        
+        predictions = []
+        current_sequence = last_sequence.copy()
+        
+        for day in range(days_ahead):
+            # Predict next day
+            pred = self.model.predict(current_sequence.reshape(1, *current_sequence.shape))
+            predictions.append(pred[0][0])
             
-            # Load preprocessors
-            from data_preprocessing import ShelterDataPreprocessor
-            self.preprocessor = ShelterDataPreprocessor()
-            self.preprocessor.load_preprocessors(preprocessor_path)
-            print(f"Preprocessors loaded from {preprocessor_path}")
-            
-        except Exception as e:
-            print(f"Error loading model/preprocessors: {e}")
-            print("Please ensure the model is trained first.")
+            # Update sequence for next prediction
+            # This is a simplified approach - in practice, you'd need to update
+            # all the features (weather, holidays, etc.) for the next day
+            new_row = current_sequence[-1].copy()
+            new_row[0] = pred[0][0]  # Update occupancy prediction
+            current_sequence = np.vstack([current_sequence[1:], new_row])
+        
+        return np.array(predictions)
     
-    def predict_occupancy(self, date, shelter_name, sequence_length=30):
-        """Predict occupancy for a specific date and shelter"""
-        if self.model is None or self.preprocessor is None:
-            raise ValueError("Model or preprocessors not loaded properly")
+    def prepare_prediction_features(self, target_date, historical_data=None):
+        """Prepare features for a specific date prediction"""
+        print(f"Preparing features for {target_date}...")
         
-        # Convert date to datetime
-        if isinstance(date, str):
-            date = pd.to_datetime(date)
+        # Create date range for sequence
+        target_dt = pd.to_datetime(target_date)
+        start_date = target_dt - timedelta(days=self.sequence_length)
         
-        # Create features for the prediction
-        features = self._create_prediction_features(date, shelter_name, sequence_length)
+        # Generate features for the sequence
+        sequence_features = []
+        
+        for i in range(self.sequence_length):
+            current_date = start_date + timedelta(days=i)
+            
+            # Temporal features
+            features = {
+                'year': current_date.year,
+                'month': current_date.month,
+                'day_of_week': current_date.dayofweek,
+                'day_of_month': current_date.day,
+                'week_of_year': current_date.isocalendar().week,
+                'quarter': current_date.quarter,
+                'season': self._get_season(current_date.month),
+                'is_weekend': int(current_date.dayofweek >= 5),
+                'is_month_end': int(current_date.is_month_end),
+                'is_month_start': int(current_date.is_month_start),
+                'is_holiday': int(current_date in self.canada_holidays),
+                'temperature': self._simulate_temperature(current_date),
+                'precipitation_mm': self._simulate_precipitation(current_date),
+                'weather_severity': self._get_weather_severity(current_date)
+            }
+            
+            # Add historical averages if available
+            if historical_data is not None:
+                features['dow_avg'] = historical_data.get('dow_avg', {}).get(current_date.dayofweek, 0)
+                features['month_avg'] = historical_data.get('month_avg', {}).get(current_date.month, 0)
+            else:
+                features['dow_avg'] = 0
+                features['month_avg'] = 0
+            
+            sequence_features.append(list(features.values()))
+        
+        return np.array(sequence_features)
+    
+    def _get_season(self, month):
+        """Get season (1=Winter, 2=Spring, 3=Summer, 4=Fall)"""
+        if month in [12, 1, 2]:
+            return 1  # Winter
+        elif month in [3, 4, 5]:
+            return 2  # Spring
+        elif month in [6, 7, 8]:
+            return 3  # Summer
+        else:
+            return 4  # Fall
+    
+    def _simulate_temperature(self, date):
+        """Simulate temperature based on season"""
+        season = self._get_season(date.month)
+        
+        if season == 1:  # Winter
+            return np.random.normal(-5, 10)
+        elif season == 2:  # Spring
+            return np.random.normal(10, 8)
+        elif season == 3:  # Summer
+            return np.random.normal(25, 8)
+        else:  # Fall
+            return np.random.normal(15, 8)
+    
+    def _simulate_precipitation(self, date):
+        """Simulate precipitation"""
+        season = self._get_season(date.month)
+        
+        precip_prob = {1: 0.3, 2: 0.4, 3: 0.2, 4: 0.3}[season]
+        
+        if np.random.random() < precip_prob:
+            return np.random.exponential(5)
+        return 0
+    
+    def _get_weather_severity(self, date):
+        """Get weather severity (1=mild, 2=moderate, 3=severe)"""
+        temp = self._simulate_temperature(date)
+        precip = self._simulate_precipitation(date)
+        
+        if (temp < -10) or (temp > 35) or (precip > 20):
+            return 3
+        elif (temp < 0) or (temp > 25) or (precip > 10):
+            return 2
+        else:
+            return 1
+    
+    def predict_for_shelter(self, shelter_info, target_date, historical_data=None):
+        """Predict occupancy for a specific shelter on a specific date"""
+        print(f"Predicting occupancy for shelter: {shelter_info.get('name', 'Unknown')}")
+        print(f"Target date: {target_date}")
+        
+        # Prepare features
+        features = self.prepare_prediction_features(target_date, historical_data)
+        
+        # Scale features if scaler is available
+        if self.scaler is not None:
+            features_reshaped = features.reshape(-1, features.shape[-1])
+            features_scaled = self.scaler.transform(features_reshaped)
+            features = features_scaled.reshape(features.shape)
         
         # Make prediction
-        prediction = self.model.predict(features.reshape(1, sequence_length, -1))
+        prediction = self.model.predict(features.reshape(1, *features.shape))
+        predicted_occupancy = prediction[0][0]
         
-        return max(0, int(prediction[0][0]))  # Ensure non-negative integer
+        # Apply shelter-specific scaling if capacity is provided
+        if 'maxCapacity' in shelter_info:
+            max_capacity = shelter_info['maxCapacity']
+            # Scale prediction based on shelter capacity
+            # This assumes the model predicts average occupancy per shelter
+            scaled_prediction = min(predicted_occupancy * (max_capacity / 100), max_capacity)
+            predicted_occupancy = max(0, scaled_prediction)
+        
+        return {
+            'shelter_name': shelter_info.get('name', 'Unknown'),
+            'target_date': target_date,
+            'predicted_occupancy': round(predicted_occupancy, 0),
+            'max_capacity': shelter_info.get('maxCapacity', None),
+            'utilization_rate': round((predicted_occupancy / shelter_info.get('maxCapacity', 100)) * 100, 1) if shelter_info.get('maxCapacity') else None
+        }
     
-    def _create_prediction_features(self, date, shelter_name, sequence_length):
-        """Create features for prediction"""
-        # This is a simplified version - in practice, you'd need historical data
-        # to create the full sequence. For now, we'll create synthetic features
+    def save_model(self, filepath):
+        """Save the trained model"""
+        if self.model is not None:
+            self.model.save(filepath)
+            print(f"Model saved to {filepath}")
+        else:
+            print("No model to save")
+    
+    def load_model(self, filepath):
+        """Load a trained model"""
+        try:
+            self.model = tf.keras.models.load_model(filepath)
+            print(f"Model loaded from {filepath}")
+        except Exception as e:
+            print(f"Error loading model: {e}")
+    
+    def plot_training_history(self, history, save_path=None):
+        """Plot training history"""
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
         
-        features = []
+        # Loss plot
+        ax1.plot(history.history['loss'], label='Training Loss')
+        if 'val_loss' in history.history:
+            ax1.plot(history.history['val_loss'], label='Validation Loss')
+        ax1.set_title('Model Loss')
+        ax1.set_xlabel('Epoch')
+        ax1.set_ylabel('Loss')
+        ax1.legend()
+        ax1.grid(True)
         
-        for i in range(sequence_length):
-            # Go back in time to create sequence
-            current_date = date - pd.Timedelta(days=sequence_length-i-1)
-            
-            # Create date features
-            year = current_date.year
-            month = current_date.month
-            day = current_date.day
-            day_of_week = current_date.dayofweek
-            day_of_year = current_date.dayofyear
-            is_weekend = 1 if day_of_week in [5, 6] else 0
-            
-            # Cyclical features
-            month_sin = np.sin(2 * np.pi * month / 12)
-            month_cos = np.cos(2 * np.pi * month / 12)
-            day_sin = np.sin(2 * np.pi * day / 31)
-            day_cos = np.cos(2 * np.pi * day / 31)
-            day_of_week_sin = np.sin(2 * np.pi * day_of_week / 7)
-            day_of_week_cos = np.cos(2 * np.pi * day_of_week / 7)
-            
-            # Encode shelter name
-            shelter_encoded = self.preprocessor.label_encoders['SHELTER_NAME'].transform([shelter_name])[0]
-            
-            # Create feature vector (simplified - you'd need to match the training features exactly)
-            feature_vector = [
-                year, month, day, day_of_week, day_of_year, is_weekend,
-                month_sin, month_cos, day_sin, day_cos,
-                day_of_week_sin, day_of_week_cos,
-                0, shelter_encoded, 0, 0,  # Placeholder encodings
-                0, 0, 0, 0, 0, 0, 0  # Placeholder lag features
-            ]
-            
-            features.append(feature_vector)
+        # MAE plot
+        ax2.plot(history.history['mae'], label='Training MAE')
+        if 'val_mae' in history.history:
+            ax2.plot(history.history['val_mae'], label='Validation MAE')
+        ax2.set_title('Model MAE')
+        ax2.set_xlabel('Epoch')
+        ax2.set_ylabel('MAE')
+        ax2.legend()
+        ax2.grid(True)
         
-        # Scale features
-        features_scaled = self.preprocessor.scaler.transform(features)
+        plt.tight_layout()
         
-        return features_scaled 
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Training history plot saved to {save_path}")
+        
+        plt.show()
+    
+    def plot_predictions(self, y_true, y_pred, save_path=None):
+        """Plot actual vs predicted values"""
+        plt.figure(figsize=(12, 6))
+        
+        # Plot actual vs predicted
+        plt.subplot(1, 2, 1)
+        plt.scatter(y_true, y_pred, alpha=0.6)
+        plt.plot([y_true.min(), y_true.max()], [y_true.min(), y_true.max()], 'r--', lw=2)
+        plt.xlabel('Actual Occupancy')
+        plt.ylabel('Predicted Occupancy')
+        plt.title('Actual vs Predicted Occupancy')
+        plt.grid(True)
+        
+        # Plot time series
+        plt.subplot(1, 2, 2)
+        plt.plot(y_true, label='Actual', alpha=0.7)
+        plt.plot(y_pred, label='Predicted', alpha=0.7)
+        plt.xlabel('Time')
+        plt.ylabel('Occupancy')
+        plt.title('Time Series Comparison')
+        plt.legend()
+        plt.grid(True)
+        
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Predictions plot saved to {save_path}")
+        
+        plt.show()
+
+# Example usage
+if __name__ == "__main__":
+    # This would be used after data preprocessing
+    print("Shelter Prediction Model")
+    print("This module provides the prediction model for the shelter occupancy system.") 

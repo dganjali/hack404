@@ -1,226 +1,244 @@
 #!/usr/bin/env python3
 """
-Prediction script for the Shelter Occupancy Prediction Model
+Shelter Occupancy Prediction Script
+Uses the new aggregated prediction pipeline to predict occupancy for any shelter
 """
 
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-import argparse
 import sys
 import os
+import argparse
+import numpy as np
+import pandas as pd
+from datetime import datetime, timedelta
+import joblib
 
-from shelter_model import ShelterPredictor
+# Add current directory to path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-def load_available_shelters():
-    """Load available shelter names from the preprocessors"""
-    try:
-        import joblib
-        shelter_names = joblib.load('models/shelter_names.pkl')
-        return shelter_names
-    except:
-        # Fallback to a sample list if preprocessors not available
-        return [
-            "COSTI Reception Centre",
-            "Christie Ossington Men's Hostel", 
-            "Christie Refugee Welcome Centre",
-            "Birchmount Residence",
-            "Birkdale Residence",
-            "Downsview Dells",
-            "Family Residence"
-        ]
+from shelter_model import ShelterPredictionModel
 
-def predict_single_date(date, shelter_name, model_path='models/shelter_model_lstm.h5'):
-    """Predict occupancy for a single date and shelter"""
-    try:
-        predictor = ShelterPredictor(model_path)
+class ShelterPredictor:
+    def __init__(self, model_path='models/shelter_model_lstm.h5', scaler_path='models/scaler_lstm.pkl'):
+        """Initialize the predictor with trained model"""
+        self.model = ShelterPredictionModel()
+        self.scaler = None
         
-        # Convert date string to datetime if needed
-        if isinstance(date, str):
-            date = pd.to_datetime(date)
+        # Load model
+        try:
+            self.model.load_model(model_path)
+            print(f"✓ Model loaded from {model_path}")
+        except Exception as e:
+            print(f"✗ Error loading model: {e}")
+            print("Please ensure the model is trained first using train_model.py")
+            return
         
-        # Make prediction
-        predicted_occupancy = predictor.predict_occupancy(date, shelter_name)
-        
-        return predicted_occupancy
-        
-    except Exception as e:
-        print(f"Error making prediction: {e}")
-        return None
-
-def predict_date_range(start_date, end_date, shelter_name, model_path='models/shelter_model_lstm.h5'):
-    """Predict occupancy for a range of dates"""
-    try:
-        predictor = ShelterPredictor(model_path)
-        
-        # Convert dates to datetime
-        if isinstance(start_date, str):
-            start_date = pd.to_datetime(start_date)
-        if isinstance(end_date, str):
-            end_date = pd.to_datetime(end_date)
-        
-        # Generate date range
-        date_range = pd.date_range(start=start_date, end=end_date, freq='D')
-        
+        # Load scaler
+        try:
+            self.scaler = joblib.load(scaler_path)
+            self.model.scaler = self.scaler
+            print(f"✓ Scaler loaded from {scaler_path}")
+        except Exception as e:
+            print(f"✗ Error loading scaler: {e}")
+    
+    def predict_occupancy(self, shelter_info, target_date):
+        """Predict occupancy for a specific shelter on a specific date"""
+        try:
+            prediction = self.model.predict_for_shelter(shelter_info, target_date)
+            return prediction
+        except Exception as e:
+            print(f"✗ Error making prediction: {e}")
+            return None
+    
+    def predict_multiple_dates(self, shelter_info, start_date, days_ahead=7):
+        """Predict occupancy for multiple consecutive days"""
         predictions = []
-        for date in date_range:
-            occupancy = predictor.predict_occupancy(date, shelter_name)
-            predictions.append({
-                'date': date.strftime('%Y-%m-%d'),
-                'day_of_week': date.strftime('%A'),
-                'predicted_occupancy': occupancy
-            })
+        current_date = pd.to_datetime(start_date)
+        
+        for i in range(days_ahead):
+            date_str = current_date.strftime('%Y-%m-%d')
+            prediction = self.predict_occupancy(shelter_info, date_str)
+            
+            if prediction:
+                predictions.append(prediction)
+            
+            current_date += timedelta(days=1)
         
         return predictions
+    
+    def predict_for_multiple_shelters(self, shelters, target_date):
+        """Predict occupancy for multiple shelters on the same date"""
+        predictions = []
         
-    except Exception as e:
-        print(f"Error making predictions: {e}")
-        return None
+        for shelter in shelters:
+            prediction = self.predict_occupancy(shelter, target_date)
+            if prediction:
+                predictions.append(prediction)
+        
+        return predictions
 
-def display_predictions(predictions, shelter_name):
-    """Display predictions in a formatted table"""
-    if not predictions:
-        print("No predictions available.")
-        return
+def main():
+    """Main function for command-line usage"""
+    parser = argparse.ArgumentParser(description='Predict shelter occupancy')
+    parser.add_argument('--date', type=str, default=None,
+                       help='Target date (YYYY-MM-DD). Defaults to tomorrow.')
+    parser.add_argument('--shelter-name', type=str, default='Test Shelter',
+                       help='Shelter name')
+    parser.add_argument('--capacity', type=int, default=100,
+                       help='Shelter maximum capacity')
+    parser.add_argument('--days-ahead', type=int, default=1,
+                       help='Number of days to predict ahead')
+    parser.add_argument('--model-path', type=str, default='models/shelter_model_lstm.h5',
+                       help='Path to trained model')
+    parser.add_argument('--scaler-path', type=str, default='models/scaler_lstm.pkl',
+                       help='Path to scaler')
     
-    print(f"\nPredictions for {shelter_name}")
-    print("="*60)
-    print(f"{'Date':<12} {'Day':<12} {'Predicted Occupancy':<20}")
-    print("-"*60)
+    args = parser.parse_args()
     
-    for pred in predictions:
-        print(f"{pred['date']:<12} {pred['day_of_week']:<12} {pred['predicted_occupancy']:<20}")
+    # Set default date to tomorrow if not provided
+    if args.date is None:
+        tomorrow = datetime.now() + timedelta(days=1)
+        args.date = tomorrow.strftime('%Y-%m-%d')
     
-    # Calculate statistics
-    occupancies = [p['predicted_occupancy'] for p in predictions]
-    avg_occupancy = np.mean(occupancies)
-    max_occupancy = max(occupancies)
-    min_occupancy = min(occupancies)
+    # Initialize predictor
+    predictor = ShelterPredictor(args.model_path, args.scaler_path)
     
-    print("-"*60)
-    print(f"Average occupancy: {avg_occupancy:.1f}")
-    print(f"Maximum occupancy: {max_occupancy}")
-    print(f"Minimum occupancy: {min_occupancy}")
+    # Create shelter info
+    shelter_info = {
+        'name': args.shelter_name,
+        'maxCapacity': args.capacity
+    }
+    
+    print(f"\nPredicting occupancy for {args.shelter_name}")
+    print(f"Target date: {args.date}")
+    print(f"Max capacity: {args.capacity}")
+    print("-" * 50)
+    
+    if args.days_ahead == 1:
+        # Single day prediction
+        prediction = predictor.predict_occupancy(shelter_info, args.date)
+        
+        if prediction:
+            print(f"Predicted Occupancy: {prediction['predicted_occupancy']}")
+            print(f"Utilization Rate: {prediction['utilization_rate']}%")
+            print(f"Max Capacity: {prediction['max_capacity']}")
+        else:
+            print("Prediction failed")
+    
+    else:
+        # Multiple days prediction
+        predictions = predictor.predict_multiple_dates(shelter_info, args.date, args.days_ahead)
+        
+        if predictions:
+            print("Predictions:")
+            print(f"{'Date':<12} {'Occupancy':<12} {'Utilization':<12}")
+            print("-" * 40)
+            
+            for pred in predictions:
+                print(f"{pred['target_date']:<12} {pred['predicted_occupancy']:<12} {pred['utilization_rate']}%")
+        else:
+            print("Predictions failed")
 
 def interactive_mode():
-    """Run in interactive mode"""
+    """Interactive prediction mode"""
     print("Shelter Occupancy Prediction - Interactive Mode")
-    print("="*50)
+    print("=" * 50)
     
-    # Load available shelters
-    shelters = load_available_shelters()
-    
-    print("\nAvailable shelters:")
-    for i, shelter in enumerate(shelters, 1):
-        print(f"{i}. {shelter}")
+    # Initialize predictor
+    predictor = ShelterPredictor()
     
     while True:
-        print("\n" + "-"*50)
-        print("Options:")
-        print("1. Predict for a single date")
-        print("2. Predict for a date range")
-        print("3. List available shelters")
+        print("\nOptions:")
+        print("1. Predict for a single shelter and date")
+        print("2. Predict for multiple days")
+        print("3. Predict for multiple shelters")
         print("4. Exit")
         
         choice = input("\nEnter your choice (1-4): ").strip()
         
         if choice == '1':
-            # Single date prediction
-            try:
-                shelter_idx = int(input(f"Enter shelter number (1-{len(shelters)}): ")) - 1
-                if 0 <= shelter_idx < len(shelters):
-                    shelter_name = shelters[shelter_idx]
-                    date_str = input("Enter date (YYYY-MM-DD): ")
-                    
-                    prediction = predict_single_date(date_str, shelter_name)
-                    if prediction is not None:
-                        print(f"\nPredicted occupancy for {shelter_name} on {date_str}: {prediction}")
-                else:
-                    print("Invalid shelter number.")
-            except ValueError:
-                print("Invalid input.")
+            # Single prediction
+            shelter_name = input("Enter shelter name: ").strip()
+            capacity = int(input("Enter shelter capacity: "))
+            target_date = input("Enter target date (YYYY-MM-DD): ").strip()
+            
+            shelter_info = {
+                'name': shelter_name,
+                'maxCapacity': capacity
+            }
+            
+            prediction = predictor.predict_occupancy(shelter_info, target_date)
+            
+            if prediction:
+                print(f"\nPrediction Results:")
+                print(f"Shelter: {prediction['shelter_name']}")
+                print(f"Date: {prediction['target_date']}")
+                print(f"Predicted Occupancy: {prediction['predicted_occupancy']}")
+                print(f"Max Capacity: {prediction['max_capacity']}")
+                print(f"Utilization Rate: {prediction['utilization_rate']}%")
+            else:
+                print("Prediction failed")
         
         elif choice == '2':
-            # Date range prediction
-            try:
-                shelter_idx = int(input(f"Enter shelter number (1-{len(shelters)}): ")) - 1
-                if 0 <= shelter_idx < len(shelters):
-                    shelter_name = shelters[shelter_idx]
-                    start_date = input("Enter start date (YYYY-MM-DD): ")
-                    end_date = input("Enter end date (YYYY-MM-DD): ")
-                    
-                    predictions = predict_date_range(start_date, end_date, shelter_name)
-                    if predictions:
-                        display_predictions(predictions, shelter_name)
-                else:
-                    print("Invalid shelter number.")
-            except ValueError:
-                print("Invalid input.")
+            # Multiple days prediction
+            shelter_name = input("Enter shelter name: ").strip()
+            capacity = int(input("Enter shelter capacity: "))
+            start_date = input("Enter start date (YYYY-MM-DD): ").strip()
+            days_ahead = int(input("Enter number of days to predict: "))
+            
+            shelter_info = {
+                'name': shelter_name,
+                'maxCapacity': capacity
+            }
+            
+            predictions = predictor.predict_multiple_dates(shelter_info, start_date, days_ahead)
+            
+            if predictions:
+                print(f"\nPredictions for {shelter_name}:")
+                print(f"{'Date':<12} {'Occupancy':<12} {'Utilization':<12}")
+                print("-" * 40)
+                
+                for pred in predictions:
+                    print(f"{pred['target_date']:<12} {pred['predicted_occupancy']:<12} {pred['utilization_rate']}%")
+            else:
+                print("Predictions failed")
         
         elif choice == '3':
-            print("\nAvailable shelters:")
-            for i, shelter in enumerate(shelters, 1):
-                print(f"{i}. {shelter}")
+            # Multiple shelters prediction
+            target_date = input("Enter target date (YYYY-MM-DD): ").strip()
+            num_shelters = int(input("Enter number of shelters: "))
+            
+            shelters = []
+            for i in range(num_shelters):
+                name = input(f"Enter shelter {i+1} name: ").strip()
+                capacity = int(input(f"Enter shelter {i+1} capacity: "))
+                shelters.append({
+                    'name': name,
+                    'maxCapacity': capacity
+                })
+            
+            predictions = predictor.predict_for_multiple_shelters(shelters, target_date)
+            
+            if predictions:
+                print(f"\nPredictions for {target_date}:")
+                print(f"{'Shelter':<20} {'Occupancy':<12} {'Utilization':<12}")
+                print("-" * 50)
+                
+                for pred in predictions:
+                    print(f"{pred['shelter_name']:<20} {pred['predicted_occupancy']:<12} {pred['utilization_rate']}%")
+            else:
+                print("Predictions failed")
         
         elif choice == '4':
             print("Goodbye!")
             break
         
         else:
-            print("Invalid choice. Please try again.")
-
-def main():
-    """Main function"""
-    parser = argparse.ArgumentParser(description='Shelter Occupancy Prediction')
-    parser.add_argument('--date', type=str, help='Date for prediction (YYYY-MM-DD)')
-    parser.add_argument('--shelter', type=str, help='Shelter name')
-    parser.add_argument('--start-date', type=str, help='Start date for range prediction')
-    parser.add_argument('--end-date', type=str, help='End date for range prediction')
-    parser.add_argument('--model', type=str, default='models/shelter_model_lstm.h5', 
-                       help='Path to trained model')
-    parser.add_argument('--interactive', action='store_true', 
-                       help='Run in interactive mode')
-    parser.add_argument('--list-shelters', action='store_true',
-                       help='List available shelters')
-    
-    args = parser.parse_args()
-    
-    # Check if model exists
-    if not os.path.exists(args.model):
-        print(f"Error: Model file {args.model} not found.")
-        print("Please train the model first using train_model.py")
-        sys.exit(1)
-    
-    # List shelters
-    if args.list_shelters:
-        shelters = load_available_shelters()
-        print("Available shelters:")
-        for i, shelter in enumerate(shelters, 1):
-            print(f"{i}. {shelter}")
-        return
-    
-    # Interactive mode
-    if args.interactive:
-        interactive_mode()
-        return
-    
-    # Single date prediction
-    if args.date and args.shelter:
-        prediction = predict_single_date(args.date, args.shelter, args.model)
-        if prediction is not None:
-            print(f"Predicted occupancy for {args.shelter} on {args.date}: {prediction}")
-        return
-    
-    # Date range prediction
-    if args.start_date and args.end_date and args.shelter:
-        predictions = predict_date_range(args.start_date, args.end_date, args.shelter, args.model)
-        if predictions:
-            display_predictions(predictions, args.shelter)
-        return
-    
-    # If no valid arguments, show help
-    print("No valid arguments provided. Use --help for usage information.")
-    print("Or use --interactive for interactive mode.")
+            print("Invalid choice. Please enter 1-4.")
 
 if __name__ == "__main__":
-    main() 
+    if len(sys.argv) > 1:
+        # Command line mode
+        main()
+    else:
+        # Interactive mode
+        interactive_mode() 

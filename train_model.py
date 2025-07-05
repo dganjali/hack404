@@ -4,16 +4,20 @@ Training script for the Shelter Occupancy Prediction Model
 """
 
 import os
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from datetime import datetime
 import warnings
-warnings.filterwarnings('ignore')
+import joblib
+
+# Add the current directory to the path so we can import our modules
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from data_preprocessing import ShelterDataPreprocessor
-from shelter_model import ShelterOccupancyModel
+from shelter_model import ShelterPredictionModel
 
 def plot_training_history(history, save_path='models/training_history.png'):
     """Plot training history"""
@@ -115,118 +119,225 @@ def evaluate_model_performance(y_true, y_pred):
         'r2': r2
     }
 
-def main():
-    """Main training function"""
-    print("Starting Shelter Occupancy Prediction Model Training")
-    print("="*60)
+def train_shelter_model(model_type='lstm', epochs=50, batch_size=32):
+    """Train the shelter prediction model using the new aggregated pipeline"""
+    
+    print("=" * 60)
+    print("SHELTER OCCUPANCY PREDICTION MODEL TRAINING")
+    print("=" * 60)
+    print(f"Model Type: {model_type.upper()}")
+    print(f"Epochs: {epochs}")
+    print(f"Batch Size: {batch_size}")
+    print("=" * 60)
+    
+    # Step 1: Data Preprocessing
+    print("\n1. DATA PREPROCESSING")
+    print("-" * 30)
+    
+    preprocessor = ShelterDataPreprocessor()
+    
+    # File paths
+    file_paths = [
+        'data/Daily shelter occupancy 2017.csv',
+        'data/Daily shelter occupancy 2018.csv',
+        'data/Daily shelter occupancy 2019.csv',
+        'data/Daily shelter occupancy 2020.csv'
+    ]
+    
+    # Process data using the new pipeline
+    processed_data = preprocessor.process_data(file_paths)
+    
+    X_train = processed_data['X_train']
+    X_test = processed_data['X_test']
+    y_train = processed_data['y_train']
+    y_test = processed_data['y_test']
+    daily_data = processed_data['daily_data']
+    scaler = processed_data['scaler']
+    
+    print(f"Training set shape: {X_train.shape}")
+    print(f"Test set shape: {X_test.shape}")
+    print(f"Target range: {y_train.min():.1f} - {y_train.max():.1f}")
+    
+    # Step 2: Model Training
+    print("\n2. MODEL TRAINING")
+    print("-" * 30)
+    
+    # Create and train model
+    model = ShelterPredictionModel(model_type=model_type)
+    model.scaler = scaler
+    
+    # Split training data for validation
+    val_split = int(0.8 * len(X_train))
+    X_train_split = X_train[:val_split]
+    X_val_split = X_train[val_split:]
+    y_train_split = y_train[:val_split]
+    y_val_split = y_train[val_split:]
+    
+    print(f"Training samples: {len(X_train_split)}")
+    print(f"Validation samples: {len(X_val_split)}")
+    
+    # Train the model
+    history = model.train_model(
+        X_train_split, y_train_split,
+        X_val_split, y_val_split,
+        epochs=epochs,
+        batch_size=batch_size
+    )
+    
+    # Step 3: Model Evaluation
+    print("\n3. MODEL EVALUATION")
+    print("-" * 30)
+    
+    # Evaluate on test set
+    evaluation_results = model.evaluate_model(X_test, y_test)
+    
+    # Step 4: Save Model and Results
+    print("\n4. SAVING MODEL AND RESULTS")
+    print("-" * 30)
     
     # Create models directory
     os.makedirs('models', exist_ok=True)
     
-    # Step 1: Data Preprocessing
-    print("\n1. Loading and preprocessing data...")
-    preprocessor = ShelterDataPreprocessor()
+    # Save model
+    model_path = f'models/shelter_model_{model_type}.h5'
+    model.save_model(model_path)
     
-    try:
-        X_train, X_test, y_train, y_test = preprocessor.prepare_data(sequence_length=30)
-        print(f"✓ Data preprocessing completed!")
-        print(f"   Training set: {X_train.shape}")
-        print(f"   Test set: {X_test.shape}")
-        print(f"   Number of features: {X_train.shape[-1]}")
-        
-        # Save preprocessors
-        preprocessor.save_preprocessors()
-        
-    except Exception as e:
-        print(f"✗ Error during data preprocessing: {e}")
-        return
+    # Save scaler
+    scaler_path = f'models/scaler_{model_type}.pkl'
+    joblib.dump(scaler, scaler_path)
     
-    # Step 2: Model Training
-    print("\n2. Training the model...")
+    # Save daily data for reference
+    daily_data_path = f'models/daily_data_{model_type}.pkl'
+    joblib.dump(daily_data, daily_data_path)
     
-    # Initialize model
-    n_features = X_train.shape[-1]
-    model = ShelterOccupancyModel(
-        sequence_length=30,
-        n_features=n_features
+    # Save evaluation results
+    results = {
+        'model_type': model_type,
+        'training_date': datetime.now().isoformat(),
+        'evaluation_results': evaluation_results,
+        'model_path': model_path,
+        'scaler_path': scaler_path,
+        'daily_data_path': daily_data_path,
+        'data_shape': {
+            'X_train': X_train.shape,
+            'X_test': X_test.shape,
+            'y_train': y_train.shape,
+            'y_test': y_test.shape
+        }
+    }
+    
+    results_path = f'models/training_results_{model_type}.pkl'
+    joblib.dump(results, results_path)
+    
+    # Step 5: Generate Plots
+    print("\n5. GENERATING PLOTS")
+    print("-" * 30)
+    
+    # Create plots directory
+    os.makedirs('models/plots', exist_ok=True)
+    
+    # Training history plot
+    history_path = f'models/plots/training_history_{model_type}.png'
+    model.plot_training_history(history, history_path)
+    
+    # Predictions plot
+    predictions_path = f'models/plots/predictions_{model_type}.png'
+    model.plot_predictions(
+        evaluation_results['actual'],
+        evaluation_results['predictions'],
+        predictions_path
     )
     
-    # Train different model architectures
-    model_types = ['lstm', 'conv_lstm']  # 'attention' can be added if needed
+    # Step 6: Summary
+    print("\n6. TRAINING SUMMARY")
+    print("-" * 30)
+    print(f"Model Type: {model_type.upper()}")
+    print(f"Training Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"MAE: {evaluation_results['mae']:.2f}")
+    print(f"RMSE: {evaluation_results['rmse']:.2f}")
+    print(f"R²: {evaluation_results['r2']:.4f}")
+    print(f"Model saved to: {model_path}")
+    print(f"Scaler saved to: {scaler_path}")
+    print(f"Results saved to: {results_path}")
     
-    best_model = None
-    best_score = float('inf')
-    best_model_type = None
+    # Step 7: Test Prediction
+    print("\n7. TEST PREDICTION")
+    print("-" * 30)
+    
+    # Test prediction for a sample shelter
+    test_shelter = {
+        'name': 'Test Shelter',
+        'maxCapacity': 100
+    }
+    
+    test_date = '2024-01-15'
+    
+    try:
+        prediction = model.predict_for_shelter(test_shelter, test_date)
+        print(f"Test Prediction for {test_date}:")
+        print(f"  Shelter: {prediction['shelter_name']}")
+        print(f"  Predicted Occupancy: {prediction['predicted_occupancy']}")
+        print(f"  Max Capacity: {prediction['max_capacity']}")
+        print(f"  Utilization Rate: {prediction['utilization_rate']}%")
+    except Exception as e:
+        print(f"Test prediction failed: {e}")
+    
+    print("\n" + "=" * 60)
+    print("TRAINING COMPLETED SUCCESSFULLY!")
+    print("=" * 60)
+    
+    return model, results
+
+def compare_models():
+    """Compare different model types"""
+    print("COMPARING DIFFERENT MODEL TYPES")
+    print("=" * 60)
+    
+    model_types = ['lstm', 'conv_lstm', 'attention']
+    results = {}
     
     for model_type in model_types:
-        print(f"\n   Training {model_type.upper()} model...")
-        
+        print(f"\nTraining {model_type.upper()} model...")
         try:
-            # Train the model
-            history = model.train(
-                X_train, y_train,
-                X_test, y_test,
-                epochs=10,  # Reduced to 10 epochs
-                batch_size=32,
-                model_type=model_type
-            )
-            
-            # Evaluate the model
-            predictions = model.predict(X_test)
-            metrics = evaluate_model_performance(y_test, predictions)
-            
-            # Check if this is the best model
-            if metrics['mae'] < best_score:
-                best_score = metrics['mae']
-                best_model = model
-                best_model_type = model_type
-            
-            # Plot training history
-            plot_training_history(history, f'models/training_history_{model_type}.png')
-            
-            # Plot predictions
-            plot_predictions(y_test, predictions, f'models/predictions_{model_type}.png')
-            
-            print(f"   ✓ {model_type.upper()} model training completed!")
-            
+            model, result = train_shelter_model(model_type=model_type, epochs=30)
+            results[model_type] = result['evaluation_results']
         except Exception as e:
-            print(f"   ✗ Error training {model_type} model: {e}")
-            continue
+            print(f"Error training {model_type} model: {e}")
+            results[model_type] = None
     
-    # Step 3: Save the best model
-    if best_model is not None:
-        print(f"\n3. Saving best model ({best_model_type.upper()})...")
-        best_model.save_model(f'models/shelter_model_{best_model_type}.h5')
-        
-        # Save model info
-        model_info = {
-            'model_type': best_model_type,
-            'sequence_length': 30,
-            'n_features': n_features,
-            'best_mae': best_score,
-            'training_date': datetime.now().isoformat(),
-            'data_shape': {
-                'X_train': X_train.shape,
-                'X_test': X_test.shape,
-                'y_train': y_train.shape,
-                'y_test': y_test.shape
-            }
-        }
-        
-        import json
-        with open('models/model_info.json', 'w') as f:
-            json.dump(model_info, f, indent=2)
-        
-        print("✓ Model training completed successfully!")
-        print(f"   Best model: {best_model_type.upper()}")
-        print(f"   Best MAE: {best_score:.2f}")
-        print(f"   Model saved to: models/shelter_model_{best_model_type}.h5")
-        
-    else:
-        print("✗ No models were successfully trained.")
+    # Print comparison
+    print("\nMODEL COMPARISON")
+    print("-" * 60)
+    print(f"{'Model':<15} {'MAE':<10} {'RMSE':<10} {'R²':<10}")
+    print("-" * 60)
     
-    print("\n" + "="*60)
-    print("Training completed!")
+    for model_type, result in results.items():
+        if result is not None:
+            print(f"{model_type.upper():<15} {result['mae']:<10.2f} {result['rmse']:<10.2f} {result['r2']:<10.4f}")
+        else:
+            print(f"{model_type.upper():<15} {'FAILED':<10} {'FAILED':<10} {'FAILED':<10}")
 
 if __name__ == "__main__":
-    main() 
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Train shelter occupancy prediction model')
+    parser.add_argument('--model-type', type=str, default='lstm', 
+                       choices=['lstm', 'conv_lstm', 'attention'],
+                       help='Type of model to train')
+    parser.add_argument('--epochs', type=int, default=50,
+                       help='Number of training epochs')
+    parser.add_argument('--batch-size', type=int, default=32,
+                       help='Batch size for training')
+    parser.add_argument('--compare', action='store_true',
+                       help='Compare all model types')
+    
+    args = parser.parse_args()
+    
+    if args.compare:
+        compare_models()
+    else:
+        train_shelter_model(
+            model_type=args.model_type,
+            epochs=args.epochs,
+            batch_size=args.batch_size
+        ) 
