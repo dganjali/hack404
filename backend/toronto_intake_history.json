@@ -1,0 +1,1052 @@
+[
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2022-12-01",
+    "beds_needed": 8358,
+    "meals_needed": 20895,
+    "kits_needed": 6686
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2023-01-01",
+    "beds_needed": 9567,
+    "meals_needed": 23917,
+    "kits_needed": 7653
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2023-02-01",
+    "beds_needed": 10664,
+    "meals_needed": 26660,
+    "kits_needed": 8531
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2023-03-01",
+    "beds_needed": 11308,
+    "meals_needed": 28270,
+    "kits_needed": 9046
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2023-04-01",
+    "beds_needed": 11275,
+    "meals_needed": 28187,
+    "kits_needed": 9020
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2023-05-01",
+    "beds_needed": 10935,
+    "meals_needed": 27337,
+    "kits_needed": 8748
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2023-06-01",
+    "beds_needed": 10237,
+    "meals_needed": 25592,
+    "kits_needed": 8189
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2023-07-01",
+    "beds_needed": 9071,
+    "meals_needed": 22677,
+    "kits_needed": 7256
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2023-08-01",
+    "beds_needed": 8091,
+    "meals_needed": 20227,
+    "kits_needed": 6472
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2023-09-01",
+    "beds_needed": 7615,
+    "meals_needed": 19037,
+    "kits_needed": 6092
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2023-10-01",
+    "beds_needed": 7309,
+    "meals_needed": 18272,
+    "kits_needed": 5847
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2023-11-01",
+    "beds_needed": 7841,
+    "meals_needed": 19602,
+    "kits_needed": 6272
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2023-12-01",
+    "beds_needed": 8623,
+    "meals_needed": 21557,
+    "kits_needed": 6898
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2024-01-01",
+    "beds_needed": 9953,
+    "meals_needed": 24882,
+    "kits_needed": 7962
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2024-02-01",
+    "beds_needed": 11118,
+    "meals_needed": 27795,
+    "kits_needed": 8894
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2024-03-01",
+    "beds_needed": 11594,
+    "meals_needed": 28985,
+    "kits_needed": 9275
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2024-04-01",
+    "beds_needed": 12073,
+    "meals_needed": 30182,
+    "kits_needed": 9658
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2024-05-01",
+    "beds_needed": 11785,
+    "meals_needed": 29462,
+    "kits_needed": 9428
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2024-06-01",
+    "beds_needed": 10971,
+    "meals_needed": 27427,
+    "kits_needed": 8776
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2024-07-01",
+    "beds_needed": 9920,
+    "meals_needed": 24800,
+    "kits_needed": 7936
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2024-08-01",
+    "beds_needed": 8951,
+    "meals_needed": 22377,
+    "kits_needed": 7160
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2024-09-01",
+    "beds_needed": 8112,
+    "meals_needed": 20280,
+    "kits_needed": 6489
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2024-10-01",
+    "beds_needed": 7922,
+    "meals_needed": 19805,
+    "kits_needed": 6337
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2024-11-01",
+    "beds_needed": 8254,
+    "meals_needed": 20635,
+    "kits_needed": 6603
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2024-12-01",
+    "beds_needed": 9480,
+    "meals_needed": 23700,
+    "kits_needed": 7584
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2025-01-01",
+    "beds_needed": 10998,
+    "meals_needed": 27495,
+    "kits_needed": 8798
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2025-02-01",
+    "beds_needed": 11986,
+    "meals_needed": 29965,
+    "kits_needed": 9588
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2025-03-01",
+    "beds_needed": 12400,
+    "meals_needed": 31000,
+    "kits_needed": 9920
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2025-04-01",
+    "beds_needed": 12127,
+    "meals_needed": 30317,
+    "kits_needed": 9701
+  },
+  {
+    "shelter_id": "toronto_shelter_1",
+    "date": "2025-05-01",
+    "beds_needed": 11311,
+    "meals_needed": 28277,
+    "kits_needed": 9048
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2022-12-01",
+    "beds_needed": 8692,
+    "meals_needed": 21730,
+    "kits_needed": 6953
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2023-01-01",
+    "beds_needed": 9950,
+    "meals_needed": 24875,
+    "kits_needed": 7960
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2023-02-01",
+    "beds_needed": 11090,
+    "meals_needed": 27725,
+    "kits_needed": 8872
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2023-03-01",
+    "beds_needed": 11760,
+    "meals_needed": 29400,
+    "kits_needed": 9408
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2023-04-01",
+    "beds_needed": 11726,
+    "meals_needed": 29315,
+    "kits_needed": 9380
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2023-05-01",
+    "beds_needed": 11372,
+    "meals_needed": 28430,
+    "kits_needed": 9097
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2023-06-01",
+    "beds_needed": 10647,
+    "meals_needed": 26617,
+    "kits_needed": 8517
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2023-07-01",
+    "beds_needed": 9434,
+    "meals_needed": 23585,
+    "kits_needed": 7547
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2023-08-01",
+    "beds_needed": 8414,
+    "meals_needed": 21035,
+    "kits_needed": 6731
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2023-09-01",
+    "beds_needed": 7919,
+    "meals_needed": 19797,
+    "kits_needed": 6335
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2023-10-01",
+    "beds_needed": 7601,
+    "meals_needed": 19002,
+    "kits_needed": 6080
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2023-11-01",
+    "beds_needed": 8155,
+    "meals_needed": 20387,
+    "kits_needed": 6524
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2023-12-01",
+    "beds_needed": 8968,
+    "meals_needed": 22420,
+    "kits_needed": 7174
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2024-01-01",
+    "beds_needed": 10351,
+    "meals_needed": 25877,
+    "kits_needed": 8280
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2024-02-01",
+    "beds_needed": 11563,
+    "meals_needed": 28907,
+    "kits_needed": 9250
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2024-03-01",
+    "beds_needed": 12058,
+    "meals_needed": 30145,
+    "kits_needed": 9646
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2024-04-01",
+    "beds_needed": 12556,
+    "meals_needed": 31390,
+    "kits_needed": 10044
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2024-05-01",
+    "beds_needed": 12256,
+    "meals_needed": 30640,
+    "kits_needed": 9804
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2024-06-01",
+    "beds_needed": 11410,
+    "meals_needed": 28525,
+    "kits_needed": 9128
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2024-07-01",
+    "beds_needed": 10317,
+    "meals_needed": 25792,
+    "kits_needed": 8253
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2024-08-01",
+    "beds_needed": 9309,
+    "meals_needed": 23272,
+    "kits_needed": 7447
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2024-09-01",
+    "beds_needed": 8436,
+    "meals_needed": 21090,
+    "kits_needed": 6748
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2024-10-01",
+    "beds_needed": 8238,
+    "meals_needed": 20595,
+    "kits_needed": 6590
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2024-11-01",
+    "beds_needed": 8584,
+    "meals_needed": 21460,
+    "kits_needed": 6867
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2024-12-01",
+    "beds_needed": 9859,
+    "meals_needed": 24647,
+    "kits_needed": 7887
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2025-01-01",
+    "beds_needed": 11438,
+    "meals_needed": 28595,
+    "kits_needed": 9150
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2025-02-01",
+    "beds_needed": 12466,
+    "meals_needed": 31165,
+    "kits_needed": 9972
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2025-03-01",
+    "beds_needed": 12896,
+    "meals_needed": 32240,
+    "kits_needed": 10316
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2025-04-01",
+    "beds_needed": 12612,
+    "meals_needed": 31530,
+    "kits_needed": 10089
+  },
+  {
+    "shelter_id": "toronto_shelter_2",
+    "date": "2025-05-01",
+    "beds_needed": 11763,
+    "meals_needed": 29407,
+    "kits_needed": 9410
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2022-12-01",
+    "beds_needed": 5015,
+    "meals_needed": 12537,
+    "kits_needed": 4012
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2023-01-01",
+    "beds_needed": 5740,
+    "meals_needed": 14350,
+    "kits_needed": 4592
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2023-02-01",
+    "beds_needed": 6398,
+    "meals_needed": 15995,
+    "kits_needed": 5118
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2023-03-01",
+    "beds_needed": 6784,
+    "meals_needed": 16960,
+    "kits_needed": 5427
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2023-04-01",
+    "beds_needed": 6765,
+    "meals_needed": 16912,
+    "kits_needed": 5412
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2023-05-01",
+    "beds_needed": 6561,
+    "meals_needed": 16402,
+    "kits_needed": 5248
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2023-06-01",
+    "beds_needed": 6142,
+    "meals_needed": 15355,
+    "kits_needed": 4913
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2023-07-01",
+    "beds_needed": 5442,
+    "meals_needed": 13605,
+    "kits_needed": 4353
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2023-08-01",
+    "beds_needed": 4854,
+    "meals_needed": 12135,
+    "kits_needed": 3883
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2023-09-01",
+    "beds_needed": 4569,
+    "meals_needed": 11422,
+    "kits_needed": 3655
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2023-10-01",
+    "beds_needed": 4385,
+    "meals_needed": 10962,
+    "kits_needed": 3508
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2023-11-01",
+    "beds_needed": 4704,
+    "meals_needed": 11760,
+    "kits_needed": 3763
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2023-12-01",
+    "beds_needed": 5174,
+    "meals_needed": 12935,
+    "kits_needed": 4139
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2024-01-01",
+    "beds_needed": 5972,
+    "meals_needed": 14930,
+    "kits_needed": 4777
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2024-02-01",
+    "beds_needed": 6671,
+    "meals_needed": 16677,
+    "kits_needed": 5336
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2024-03-01",
+    "beds_needed": 6956,
+    "meals_needed": 17390,
+    "kits_needed": 5564
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2024-04-01",
+    "beds_needed": 7244,
+    "meals_needed": 18110,
+    "kits_needed": 5795
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2024-05-01",
+    "beds_needed": 7071,
+    "meals_needed": 17677,
+    "kits_needed": 5656
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2024-06-01",
+    "beds_needed": 6582,
+    "meals_needed": 16455,
+    "kits_needed": 5265
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2024-07-01",
+    "beds_needed": 5952,
+    "meals_needed": 14880,
+    "kits_needed": 4761
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2024-08-01",
+    "beds_needed": 5371,
+    "meals_needed": 13427,
+    "kits_needed": 4296
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2024-09-01",
+    "beds_needed": 4867,
+    "meals_needed": 12167,
+    "kits_needed": 3893
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2024-10-01",
+    "beds_needed": 4753,
+    "meals_needed": 11882,
+    "kits_needed": 3802
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2024-11-01",
+    "beds_needed": 4952,
+    "meals_needed": 12380,
+    "kits_needed": 3961
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2024-12-01",
+    "beds_needed": 5688,
+    "meals_needed": 14220,
+    "kits_needed": 4550
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2025-01-01",
+    "beds_needed": 6599,
+    "meals_needed": 16497,
+    "kits_needed": 5279
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2025-02-01",
+    "beds_needed": 7191,
+    "meals_needed": 17977,
+    "kits_needed": 5752
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2025-03-01",
+    "beds_needed": 7440,
+    "meals_needed": 18600,
+    "kits_needed": 5952
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2025-04-01",
+    "beds_needed": 7276,
+    "meals_needed": 18190,
+    "kits_needed": 5820
+  },
+  {
+    "shelter_id": "toronto_shelter_3",
+    "date": "2025-05-01",
+    "beds_needed": 6786,
+    "meals_needed": 16965,
+    "kits_needed": 5428
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2022-12-01",
+    "beds_needed": 4012,
+    "meals_needed": 10030,
+    "kits_needed": 3209
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2023-01-01",
+    "beds_needed": 4592,
+    "meals_needed": 11480,
+    "kits_needed": 3673
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2023-02-01",
+    "beds_needed": 5118,
+    "meals_needed": 12795,
+    "kits_needed": 4094
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2023-03-01",
+    "beds_needed": 5427,
+    "meals_needed": 13567,
+    "kits_needed": 4341
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2023-04-01",
+    "beds_needed": 5412,
+    "meals_needed": 13530,
+    "kits_needed": 4329
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2023-05-01",
+    "beds_needed": 5249,
+    "meals_needed": 13122,
+    "kits_needed": 4199
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2023-06-01",
+    "beds_needed": 4914,
+    "meals_needed": 12285,
+    "kits_needed": 3931
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2023-07-01",
+    "beds_needed": 4354,
+    "meals_needed": 10885,
+    "kits_needed": 3483
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2023-08-01",
+    "beds_needed": 3883,
+    "meals_needed": 9707,
+    "kits_needed": 3106
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2023-09-01",
+    "beds_needed": 3655,
+    "meals_needed": 9137,
+    "kits_needed": 2924
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2023-10-01",
+    "beds_needed": 3508,
+    "meals_needed": 8770,
+    "kits_needed": 2806
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2023-11-01",
+    "beds_needed": 3763,
+    "meals_needed": 9407,
+    "kits_needed": 3010
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2023-12-01",
+    "beds_needed": 4139,
+    "meals_needed": 10347,
+    "kits_needed": 3311
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2024-01-01",
+    "beds_needed": 4777,
+    "meals_needed": 11942,
+    "kits_needed": 3821
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2024-02-01",
+    "beds_needed": 5337,
+    "meals_needed": 13342,
+    "kits_needed": 4269
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2024-03-01",
+    "beds_needed": 5565,
+    "meals_needed": 13912,
+    "kits_needed": 4452
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2024-04-01",
+    "beds_needed": 5795,
+    "meals_needed": 14487,
+    "kits_needed": 4636
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2024-05-01",
+    "beds_needed": 5656,
+    "meals_needed": 14140,
+    "kits_needed": 4524
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2024-06-01",
+    "beds_needed": 5266,
+    "meals_needed": 13165,
+    "kits_needed": 4212
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2024-07-01",
+    "beds_needed": 4762,
+    "meals_needed": 11905,
+    "kits_needed": 3809
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2024-08-01",
+    "beds_needed": 4296,
+    "meals_needed": 10740,
+    "kits_needed": 3436
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2024-09-01",
+    "beds_needed": 3893,
+    "meals_needed": 9732,
+    "kits_needed": 3114
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2024-10-01",
+    "beds_needed": 3802,
+    "meals_needed": 9505,
+    "kits_needed": 3041
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2024-11-01",
+    "beds_needed": 3962,
+    "meals_needed": 9905,
+    "kits_needed": 3169
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2024-12-01",
+    "beds_needed": 4550,
+    "meals_needed": 11375,
+    "kits_needed": 3640
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2025-01-01",
+    "beds_needed": 5279,
+    "meals_needed": 13197,
+    "kits_needed": 4223
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2025-02-01",
+    "beds_needed": 5753,
+    "meals_needed": 14382,
+    "kits_needed": 4602
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2025-03-01",
+    "beds_needed": 5952,
+    "meals_needed": 14880,
+    "kits_needed": 4761
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2025-04-01",
+    "beds_needed": 5821,
+    "meals_needed": 14552,
+    "kits_needed": 4656
+  },
+  {
+    "shelter_id": "toronto_shelter_4",
+    "date": "2025-05-01",
+    "beds_needed": 5429,
+    "meals_needed": 13572,
+    "kits_needed": 4343
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2022-12-01",
+    "beds_needed": 4680,
+    "meals_needed": 11700,
+    "kits_needed": 3744
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2023-01-01",
+    "beds_needed": 5357,
+    "meals_needed": 13392,
+    "kits_needed": 4285
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2023-02-01",
+    "beds_needed": 5972,
+    "meals_needed": 14930,
+    "kits_needed": 4777
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2023-03-01",
+    "beds_needed": 6332,
+    "meals_needed": 15830,
+    "kits_needed": 5065
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2023-04-01",
+    "beds_needed": 6314,
+    "meals_needed": 15785,
+    "kits_needed": 5051
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2023-05-01",
+    "beds_needed": 6123,
+    "meals_needed": 15307,
+    "kits_needed": 4898
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2023-06-01",
+    "beds_needed": 5733,
+    "meals_needed": 14332,
+    "kits_needed": 4586
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2023-07-01",
+    "beds_needed": 5080,
+    "meals_needed": 12700,
+    "kits_needed": 4064
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2023-08-01",
+    "beds_needed": 4530,
+    "meals_needed": 11325,
+    "kits_needed": 3624
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2023-09-01",
+    "beds_needed": 4264,
+    "meals_needed": 10660,
+    "kits_needed": 3411
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2023-10-01",
+    "beds_needed": 4093,
+    "meals_needed": 10232,
+    "kits_needed": 3274
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2023-11-01",
+    "beds_needed": 4391,
+    "meals_needed": 10977,
+    "kits_needed": 3512
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2023-12-01",
+    "beds_needed": 4829,
+    "meals_needed": 12072,
+    "kits_needed": 3863
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2024-01-01",
+    "beds_needed": 5573,
+    "meals_needed": 13932,
+    "kits_needed": 4458
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2024-02-01",
+    "beds_needed": 6226,
+    "meals_needed": 15565,
+    "kits_needed": 4980
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2024-03-01",
+    "beds_needed": 6492,
+    "meals_needed": 16230,
+    "kits_needed": 5193
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2024-04-01",
+    "beds_needed": 6761,
+    "meals_needed": 16902,
+    "kits_needed": 5408
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2024-05-01",
+    "beds_needed": 6599,
+    "meals_needed": 16497,
+    "kits_needed": 5279
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2024-06-01",
+    "beds_needed": 6144,
+    "meals_needed": 15360,
+    "kits_needed": 4915
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2024-07-01",
+    "beds_needed": 5555,
+    "meals_needed": 13887,
+    "kits_needed": 4444
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2024-08-01",
+    "beds_needed": 5012,
+    "meals_needed": 12530,
+    "kits_needed": 4009
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2024-09-01",
+    "beds_needed": 4542,
+    "meals_needed": 11355,
+    "kits_needed": 3633
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2024-10-01",
+    "beds_needed": 4436,
+    "meals_needed": 11090,
+    "kits_needed": 3548
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2024-11-01",
+    "beds_needed": 4622,
+    "meals_needed": 11555,
+    "kits_needed": 3697
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2024-12-01",
+    "beds_needed": 5308,
+    "meals_needed": 13270,
+    "kits_needed": 4246
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2025-01-01",
+    "beds_needed": 6159,
+    "meals_needed": 15397,
+    "kits_needed": 4927
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2025-02-01",
+    "beds_needed": 6712,
+    "meals_needed": 16780,
+    "kits_needed": 5369
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2025-03-01",
+    "beds_needed": 6944,
+    "meals_needed": 17360,
+    "kits_needed": 5555
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2025-04-01",
+    "beds_needed": 6791,
+    "meals_needed": 16977,
+    "kits_needed": 5432
+  },
+  {
+    "shelter_id": "toronto_shelter_5",
+    "date": "2025-05-01",
+    "beds_needed": 6334,
+    "meals_needed": 15835,
+    "kits_needed": 5067
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "shelter_1",
+    "name": "Downtown Hope Center",
+    "capacity": 50,
+    "current_beds": 35,
+    "current_meals": 120,
+    "current_kits": 45
+  },
+  {
+    "id": "shelter_2", 
+    "name": "Northside Refuge",
+    "capacity": 40,
+    "current_beds": 28,
+    "current_meals": 95,
+    "current_kits": 32
+  },
+  {
+    "id": "shelter_3",
+    "name": "East End Shelter",
+    "capacity": 35,
+    "current_beds": 22,
+    "current_meals": 80,
+    "current_kits": 28
+  },
+  {
+    "id": "shelter_4",
+    "name": "Westside Safe Haven",
+    "capacity": 45,
+    "current_beds": 38,
+    "current_meals": 110,
+    "current_kits": 40
+  },
+  {
+    "id": "shelter_5",
+    "name": "Central Community Shelter",
+    "capacity": 60,
+    "current_beds": 45,
+    "current_meals": 140,
+    "current_kits": 55
+  }
+] 
