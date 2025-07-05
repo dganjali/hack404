@@ -1,0 +1,3 @@
+The data set provides a listing of all the active shelters serving the City of Toronto area. Included in the dataset is the name of the shelter, program name, sector served (i.e. men, women, youth, families) addresses, funded program capacity, and the number of people that occupied those spaces at 4:00 AM the next morning. For example, the occupancy count of January 1st would be taken on January 2nd at 4 AM.
+
+The reporting in this dataset has now been updated as a new open data set. This updated data set includes all overnight service programs administered by the Shelter, Support and Housing Administration division (e.g. 24-hour respites and COVID-19 hotel shelter programs) rather than just shelter programs.
