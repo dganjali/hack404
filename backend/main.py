@@ -10,6 +10,7 @@ from predict import DemandForecaster
 from optimize import ResourceOptimizer
 from database import connect_to_mongo, close_mongo_connection, init_database
 from auth import login_user, register_user, get_current_user, get_user_from_token
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -41,42 +42,57 @@ async def startup_event():
 async def shutdown_event():
     await close_mongo_connection()
 
-# Load data with Toronto data priority
+# Load data with real data priority
 def load_shelters():
-    """Load shelter data, preferring Toronto data if available"""
+    """Load shelter data, preferring real data if available"""
     try:
-        # Try Toronto data first
-        with open("toronto_shelters.json", "r") as f:
+        # Try real data first
+        with open("../data/real_shelters.json", "r") as f:
             return json.load(f)
     except FileNotFoundError:
         try:
-            # Fall back to mock data
-            with open("shelters.json", "r") as f:
+            # Fall back to Toronto data
+            with open("toronto_shelters.json", "r") as f:
                 return json.load(f)
         except FileNotFoundError:
-            return []
+            try:
+                # Fall back to mock data
+                with open("shelters.json", "r") as f:
+                    return json.load(f)
+            except FileNotFoundError:
+                return []
 
 def load_intake_history():
-    """Load intake history, preferring Toronto data if available"""
+    """Load intake history, preferring real data if available"""
     try:
-        # Try Toronto data first
-        with open("toronto_intake_history.json", "r") as f:
+        # Try real data first
+        with open("../data/real_intake_history.json", "r") as f:
             return json.load(f)
     except FileNotFoundError:
         try:
-            # Fall back to mock data
-            with open("intake_history.json", "r") as f:
+            # Fall back to Toronto data
+            with open("toronto_intake_history.json", "r") as f:
                 return json.load(f)
         except FileNotFoundError:
-            return []
+            try:
+                # Fall back to mock data
+                with open("intake_history.json", "r") as f:
+                    return json.load(f)
+            except FileNotFoundError:
+                return []
 
-def load_toronto_features():
-    """Load Toronto features for enhanced ML"""
+def load_real_features():
+    """Load real features for enhanced ML"""
     try:
-        with open("toronto_features.json", "r") as f:
+        with open("../data/real_features.json", "r") as f:
             return json.load(f)
     except FileNotFoundError:
-        return None
+        try:
+            # Fall back to Toronto features
+            with open("toronto_features.json", "r") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return None
 
 # Pydantic models
 class UserLogin(BaseModel):
@@ -179,7 +195,7 @@ async def get_intake_history(current_user: dict = Depends(get_current_user_depen
 @app.get("/toronto-features")
 async def get_toronto_features(current_user: dict = Depends(get_current_user_dependency)):
     """Get Toronto demographic and flow features"""
-    features = load_toronto_features()
+    features = load_real_features()
     if features:
         return {"features": features}
     else:
@@ -190,7 +206,7 @@ async def get_data_summary(current_user: dict = Depends(get_current_user_depende
     """Get summary of current data sources and statistics"""
     shelters = load_shelters()
     history = load_intake_history()
-    features = load_toronto_features()
+    features = load_real_features()
     
     summary = {
         "data_source": "Toronto Shelter System" if features else "Mock Data",
@@ -218,57 +234,84 @@ async def get_data_summary(current_user: dict = Depends(get_current_user_depende
 
 @app.post("/forecast", response_model=ForecastResponse)
 async def forecast_demand(request: ForecastRequest, current_user: dict = Depends(get_current_user_dependency)):
-    """Forecast tomorrow's demand for a specific shelter"""
+    """Forecast current demand based on real-time data"""
     try:
         forecaster = DemandForecaster()
-        shelters = load_shelters()
-        history = load_intake_history()
         
-        # Find the shelter
-        shelter = next((s for s in shelters if s["id"] == request.shelter_id), None)
-        if not shelter:
-            raise HTTPException(status_code=404, detail="Shelter not found")
+        # Get current prediction
+        prediction = forecaster.predict_current_demand()
         
-        # Get historical data for this shelter
-        shelter_history = [h for h in history if h["shelter_id"] == request.shelter_id]
-        
-        if len(shelter_history) < 7:
-            raise HTTPException(status_code=400, detail="Insufficient historical data")
-        
-        # Make prediction
-        prediction = forecaster.predict(shelter_history)
+        if "error" in prediction:
+            raise HTTPException(status_code=500, detail=prediction["error"])
         
         return ForecastResponse(
             shelter_id=request.shelter_id,
-            predicted_beds_needed=prediction["beds"],
-            predicted_meals_needed=prediction["meals"],
-            predicted_kits_needed=prediction["kits"]
+            predicted_beds_needed=prediction["beds_needed"],
+            predicted_meals_needed=prediction["meals_needed"],
+            predicted_kits_needed=prediction["kits_needed"]
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/forecast-all")
 async def forecast_all_shelters(current_user: dict = Depends(get_current_user_dependency)):
-    """Forecast demand for all shelters"""
+    """Get current demand forecast for all shelters"""
     try:
         forecaster = DemandForecaster()
+        
+        # Get current prediction
+        prediction = forecaster.predict_current_demand()
+        
+        if "error" in prediction:
+            raise HTTPException(status_code=500, detail=prediction["error"])
+        
+        # Get all shelters
         shelters = load_shelters()
-        history = load_intake_history()
+        
+        # Distribute prediction across shelters based on capacity
+        total_capacity = sum(s["capacity"] for s in shelters) if shelters else 1
         
         predictions = []
         for shelter in shelters:
-            shelter_history = [h for h in history if h["shelter_id"] == shelter["id"]]
-            if len(shelter_history) >= 7:
-                prediction = forecaster.predict(shelter_history)
-                predictions.append({
-                    "shelter_id": shelter["id"],
-                    "shelter_name": shelter["name"],
-                    "predicted_beds_needed": prediction["beds"],
-                    "predicted_meals_needed": prediction["meals"],
-                    "predicted_kits_needed": prediction["kits"]
-                })
+            capacity_ratio = shelter["capacity"] / total_capacity
+            predictions.append({
+                "shelter_id": shelter["id"],
+                "shelter_name": shelter["name"],
+                "predicted_beds_needed": int(prediction["beds_needed"] * capacity_ratio),
+                "predicted_meals_needed": int(prediction["meals_needed"] * capacity_ratio),
+                "predicted_kits_needed": int(prediction["kits_needed"] * capacity_ratio),
+                "total_occupancy": int(prediction["total_occupancy"] * capacity_ratio),
+                "confidence": prediction["confidence"],
+                "timestamp": prediction["timestamp"]
+            })
         
-        return {"predictions": predictions}
+        return {
+            "predictions": predictions,
+            "system_prediction": prediction,
+            "data_source": prediction.get("data_source", "Real Toronto Data")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/real-time-forecast")
+async def get_real_time_forecast(current_user: dict = Depends(get_current_user_dependency)):
+    """Get real-time forecast with detailed information"""
+    try:
+        forecaster = DemandForecaster()
+        
+        # Get comprehensive prediction summary
+        summary = forecaster.get_prediction_summary()
+        
+        if "error" in summary:
+            raise HTTPException(status_code=500, detail=summary["error"])
+        
+        return {
+            "current_prediction": summary["current_prediction"],
+            "weekly_forecast": summary["weekly_forecast"],
+            "summary": summary["summary"],
+            "timestamp": datetime.now().isoformat(),
+            "data_source": "Real Toronto Shelter Data (2017-2020)"
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -315,7 +358,7 @@ async def get_dashboard_data(current_user: dict = Depends(get_current_user_depen
     try:
         shelters = load_shelters()
         history = load_intake_history()
-        features = load_toronto_features()
+        features = load_real_features()
         
         # Get forecasts
         forecaster = DemandForecaster()
@@ -350,7 +393,7 @@ async def get_dashboard_data(current_user: dict = Depends(get_current_user_depen
 @app.get("/toronto-analytics")
 async def get_toronto_analytics(current_user: dict = Depends(get_current_user_dependency)):
     """Get Toronto-specific analytics and insights"""
-    features = load_toronto_features()
+    features = load_real_features()
     if not features:
         raise HTTPException(status_code=404, detail="Toronto features not available")
     

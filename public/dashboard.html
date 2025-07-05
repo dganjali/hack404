@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - NeedsMatcher</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <h1>NeedsMatcher Dashboard</h1>
+    <div class="user-info">
+      <span id="userName"></span>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Real-time Forecast -->
+    <section class="forecast-section">
+      <h2>Real-Time Forecast</h2>
+      <div id="forecast" class="forecast-grid">
+        <div class="loading">Loading forecast...</div>
+      </div>
+    </section>
+
+    <!-- Shelter Overview -->
+    <section class="shelters-section">
+      <h2>Shelter Overview</h2>
+      <div id="shelters" class="shelters-grid">
+        <div class="loading">Loading shelters...</div>
+      </div>
+    </section>
+
+    <!-- Charts -->
+    <section class="charts-section">
+      <h2>Analytics</h2>
+      <div class="charts-grid">
+        <div class="chart-container">
+          <canvas id="occupancyChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <canvas id="demandChart"></canvas>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Check authentication
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    if (!token) {
+      window.location.href = '/login.html';
+    }
+
+    document.getElementById('userName').textContent = user.name || user.email || 'User';
+
+    // API functions
+    async function fetchWithAuth(url, options = {}) {
+      return fetch(url, {
+        ...options,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          ...options.headers
+        }
+      });
+    }
+
+    // Load forecast
+    async function loadForecast() {
+      try {
+        const response = await fetchWithAuth('/api/forecast', {
+          method: 'POST',
+          body: JSON.stringify({ features: {} })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          displayForecast(data);
+        } else {
+          document.getElementById('forecast').innerHTML = '<div class="error">Failed to load forecast</div>';
+        }
+      } catch (err) {
+        document.getElementById('forecast').innerHTML = '<div class="error">Forecast error</div>';
+      }
+    }
+
+    // Display forecast
+    function displayForecast(data) {
+      const forecastDiv = document.getElementById('forecast');
+      forecastDiv.innerHTML = `
+        <div class="forecast-card">
+          <h3>Beds Needed</h3>
+          <div class="number">${data.beds_needed || 0}</div>
+        </div>
+        <div class="forecast-card">
+          <h3>Meals Needed</h3>
+          <div class="number">${data.meals_needed || 0}</div>
+        </div>
+        <div class="forecast-card">
+          <h3>Kits Needed</h3>
+          <div class="number">${data.kits_needed || 0}</div>
+        </div>
+        <div class="forecast-card">
+          <h3>Confidence</h3>
+          <div class="number">${Math.round((data.confidence || 0) * 100)}%</div>
+        </div>
+      `;
+    }
+
+    // Load dashboard data
+    async function loadDashboardData() {
+      try {
+        const response = await fetchWithAuth('/api/dashboard-data');
+        
+        if (response.ok) {
+          const data = await response.json();
+          displayShelters(data.shelters);
+          createCharts(data);
+        } else {
+          document.getElementById('shelters').innerHTML = '<div class="error">Failed to load data</div>';
+        }
+      } catch (err) {
+        document.getElementById('shelters').innerHTML = '<div class="error">Data error</div>';
+      }
+    }
+
+    // Display shelters
+    function displayShelters(shelters) {
+      const sheltersDiv = document.getElementById('shelters');
+      if (!shelters || shelters.length === 0) {
+        sheltersDiv.innerHTML = '<div class="error">No shelter data available</div>';
+        return;
+      }
+
+      const html = shelters.slice(0, 6).map(shelter => `
+        <div class="shelter-card">
+          <h3>${shelter.name}</h3>
+          <p>Capacity: ${shelter.capacity}</p>
+          <p>Current: ${shelter.current_beds || 0}</p>
+          <div class="utilization">${Math.round((shelter.current_beds || 0) / shelter.capacity * 100)}% full</div>
+        </div>
+      `).join('');
+      
+      sheltersDiv.innerHTML = html;
+    }
+
+    // Create charts
+    function createCharts(data) {
+      // Occupancy Chart
+      const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
+      new Chart(occupancyCtx, {
+        type: 'line',
+        data: {
+          labels: data.shelters?.slice(0, 5).map(s => s.name) || [],
+          datasets: [{
+            label: 'Current Occupancy',
+            data: data.shelters?.slice(0, 5).map(s => s.current_beds || 0) || [],
+            borderColor: 'rgb(75, 192, 192)',
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: { display: true, text: 'Shelter Occupancy' }
+          }
+        }
+      });
+
+      // Demand Chart
+      const demandCtx = document.getElementById('demandChart').getContext('2d');
+      new Chart(demandCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Beds', 'Meals', 'Kits'],
+          datasets: [{
+            label: 'Predicted Demand',
+            data: [100, 150, 30], // Placeholder data
+            backgroundColor: ['rgba(255, 99, 132, 0.2)', 'rgba(54, 162, 235, 0.2)', 'rgba(255, 205, 86, 0.2)'],
+            borderColor: ['rgb(255, 99, 132)', 'rgb(54, 162, 235)', 'rgb(255, 205, 86)'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: { display: true, text: 'Resource Demand' }
+          }
+        }
+      });
+    }
+
+    // Logout function
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login.html';
+    }
+
+    // Initialize dashboard
+    loadForecast();
+    loadDashboardData();
+  </script>
+</body>
+</html> 

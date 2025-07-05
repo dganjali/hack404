@@ -1,0 +1,15 @@
+{
+  "name": "needsmatcher",
+  "version": "1.0.0",
+  "description": "Toronto Shelter Demand Forecasting System",
+  "scripts": {
+    "install-all": "cd backend && npm install && cd ../ml_service && pip install -r requirements.txt",
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "backend": "cd backend && npm start",
+    "ml-service": "cd ml_service && python -m uvicorn app:app --host 0.0.0.0 --port 8001"
+  },
+  "keywords": ["shelter", "forecasting", "toronto", "ml"],
+  "author": "NeedsMatcher Team",
+  "license": "MIT"
+} 

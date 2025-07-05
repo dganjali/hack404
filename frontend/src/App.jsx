@@ -5,6 +5,7 @@ import Header from './components/Header';
 import ShelterCard from './components/ShelterCard';
 import ForecastChart from './components/ForecastChart';
 import TransferTable from './components/TransferTable';
+import RealTimeForecast from './components/RealTimeForecast';
 import API_BASE_URL from './config';
 import { RefreshCw, TrendingUp, Package, Users, MapPin, Database } from 'lucide-react';
 
@@ -129,6 +130,8 @@ function App() {
 
         {dashboardData && (
           <div className="space-y-6">
+            {/* Real-Time Forecast */}
+            <RealTimeForecast token={localStorage.getItem('token')} />
             {/* Data Source Info */}
             <div className="bg-white overflow-hidden shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">

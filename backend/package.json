@@ -1,0 +1,21 @@
+{
+  "name": "needsmatcher-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "concurrently \"npm start\" \"cd ../ml_service && python -m uvicorn app:app --host 0.0.0.0 --port 8001\"",
+    "install-deps": "npm install && cd ../ml_service && pip install -r requirements.txt"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "mongoose": "^7.6.3",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "node-fetch": "^3.3.2",
+    "dotenv": "^16.3.1",
+    "concurrently": "^8.2.2"
+  }
+} 
