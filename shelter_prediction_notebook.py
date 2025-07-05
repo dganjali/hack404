@@ -323,7 +323,166 @@ class LocationFeaturePipeline:
         return features
 
 # ============================================================================
-# 2. DATA PREPROCESSING
+# 1.5. WEATHER DATA PROCESSOR
+# ============================================================================
+
+class WeatherDataProcessor:
+    """Weather data processor - SIMPLIFIED FOR TEMPERATURE ONLY"""
+    
+    def __init__(self, data_dir='data'):
+        self.data_dir = data_dir
+        self.weather_data = None
+        self.daily_weather = None
+        
+    def load_weather_data(self):
+        """Load all weather CSV files from all years - TEMPERATURE ONLY"""
+        print("Loading weather data from year/month folders...")
+        all_weather_data = []
+        
+        for year in [2017, 2018, 2019, 2020]:
+            weather_dir = os.path.join(self.data_dir, f'Weather {year}')
+            if os.path.exists(weather_dir):
+                print(f"Loading weather data for {year}...")
+                
+                # Load all monthly files for this year
+                for month in range(1, 13):
+                    month_str = f"{month:02d}"
+                    filename = f"en_climate_hourly_ON_6158359_{month_str}-{year}_P1H.csv"
+                    file_path = os.path.join(weather_dir, filename)
+                    
+                    if os.path.exists(file_path):
+                        try:
+                            print(f"  Loading {filename}...")
+                            df = pd.read_csv(file_path)
+                            # Only keep essential columns: Date/Time, Temp (°C), Year, Month, Day
+                            essential_cols = ['Date/Time', 'Temp (°C)', 'Year', 'Month', 'Day']
+                            available_cols = [col for col in essential_cols if col in df.columns]
+                            
+                            if len(available_cols) >= 3:  # At least Date/Time, Temp, and one date component
+                                df = df[available_cols]
+                                all_weather_data.append(df)
+                            else:
+                                print(f"  Skipping {filename} - missing essential columns")
+                        except Exception as e:
+                            print(f"Error loading {filename}: {e}")
+                    else:
+                        print(f"  File not found: {filename}")
+        
+        if all_weather_data:
+            self.weather_data = pd.concat(all_weather_data, ignore_index=True)
+            print(f"Weather data loaded: {self.weather_data.shape}")
+            print(f"Columns: {list(self.weather_data.columns)}")
+        else:
+            print("No weather data found!")
+            return None
+        
+        return self.weather_data
+    
+    def process_weather_data(self):
+        """Process weather data to get daily temperature averages - TEMPERATURE ONLY"""
+        if self.weather_data is None:
+            self.load_weather_data()
+        
+        if self.weather_data is None:
+            return None
+        
+        print("Processing weather data for temperature only...")
+        
+        # Convert date/time column
+        self.weather_data['Date/Time'] = pd.to_datetime(self.weather_data['Date/Time'])
+        
+        # Extract date components
+        self.weather_data['date'] = self.weather_data['Date/Time'].dt.date
+        self.weather_data['year'] = self.weather_data['Date/Time'].dt.year
+        self.weather_data['month'] = self.weather_data['Date/Time'].dt.month
+        self.weather_data['day'] = self.weather_data['Date/Time'].dt.day
+        
+        # Convert temperature to numeric, handling any non-numeric values
+        self.weather_data['Temp (°C)'] = pd.to_numeric(self.weather_data['Temp (°C)'], errors='coerce')
+        
+        print(f"Processing weather data with columns: {list(self.weather_data.columns)}")
+        
+        # Calculate daily temperature averages - ONLY TEMPERATURE
+        groupby_columns = ['date', 'year', 'month', 'day']
+        
+        # Verify all groupby columns exist
+        missing_columns = [col for col in groupby_columns if col not in self.weather_data.columns]
+        if missing_columns:
+            print(f"Warning: Missing columns for groupby: {missing_columns}")
+            print(f"Available columns: {list(self.weather_data.columns)}")
+            # Remove missing columns from groupby
+            groupby_columns = [col for col in groupby_columns if col in self.weather_data.columns]
+            print(f"Using groupby columns: {groupby_columns}")
+        
+        # Only aggregate temperature - nothing else
+        daily_weather = self.weather_data.groupby(groupby_columns).agg({
+            'Temp (°C)': 'mean'  # ONLY TEMPERATURE MEAN
+        }).reset_index()
+        
+        # Rename temperature column to be consistent
+        daily_weather = daily_weather.rename(columns={'Temp (°C)': 'temp_mean'})
+        
+        print(f"Daily weather columns: {list(daily_weather.columns)}")
+        print(f"Sample data shape: {daily_weather.shape}")
+        
+        self.daily_weather = daily_weather
+        print(f"Processed daily weather data: {self.daily_weather.shape}")
+        
+        return self.daily_weather
+    
+    def get_weather_for_date(self, target_date):
+        """Get temperature data for a specific date - TEMPERATURE ONLY"""
+        if self.daily_weather is None:
+            self.process_weather_data()
+        
+        if self.daily_weather is None:
+            return None
+        
+        target_dt = pd.to_datetime(target_date)
+        target_date_only = target_dt.date()
+        
+        # Find weather data for this date
+        weather_row = self.daily_weather[self.daily_weather['date'] == target_date_only]
+        
+        if len(weather_row) == 0:
+            # If no exact match, use monthly average
+            month = target_dt.month
+            
+            try:
+                monthly_avg = self.daily_weather[self.daily_weather['month'] == month]['temp_mean'].mean()
+                if pd.isna(monthly_avg):
+                    monthly_avg = self._simulate_temp_by_month(month)
+            except:
+                monthly_avg = self._simulate_temp_by_month(month)
+            
+            return {
+                'temp_mean': monthly_avg,
+                'month': month,
+                'day': target_dt.day
+            }
+        
+        # Return actual temperature data
+        row = weather_row.iloc[0]
+        
+        return {
+            'temp_mean': row['temp_mean'],
+            'month': row['month'],
+            'day': row['day']
+        }
+    
+    def _simulate_temp_by_month(self, month):
+        """Simulate temperature based on month"""
+        if month in [12, 1, 2]:  # Winter
+            return np.random.normal(-5, 10)
+        elif month in [3, 4, 5]:  # Spring
+            return np.random.normal(10, 8)
+        elif month in [6, 7, 8]:  # Summer
+            return np.random.normal(25, 8)
+        else:  # Fall
+            return np.random.normal(15, 8)
+
+# ============================================================================
+# 2. DATA PREPROCESSING - YEAR-INDEPENDENT WITH WEATHER
 # ============================================================================
 
 class ShelterDataPreprocessor:
@@ -334,6 +493,7 @@ class ShelterDataPreprocessor:
         self.shelter_names = None
         self.canada_holidays = holidays.Canada()
         self.location_pipeline = LocationFeaturePipeline()
+        self.weather_processor = WeatherDataProcessor(data_dir)
         
     def load_data(self):
         """Load all CSV files and combine them"""
@@ -351,26 +511,60 @@ class ShelterDataPreprocessor:
         return combined_df
     
     def preprocess_data(self, df):
-        """Preprocess the data for training"""
+        """Preprocess the data for training - YEAR INDEPENDENT WITH WEATHER"""
         # Convert date column
         df['OCCUPANCY_DATE'] = pd.to_datetime(df['OCCUPANCY_DATE'], errors='coerce', infer_datetime_format=True)
         df = df.dropna(subset=['OCCUPANCY_DATE'])
         
-        # Extract date features
-        df['year'] = df['OCCUPANCY_DATE'].dt.year
+        # Extract date features - IGNORE YEAR, focus on day/month patterns
         df['month'] = df['OCCUPANCY_DATE'].dt.month
         df['day'] = df['OCCUPANCY_DATE'].dt.day
         df['day_of_week'] = df['OCCUPANCY_DATE'].dt.dayofweek
         df['day_of_year'] = df['OCCUPANCY_DATE'].dt.dayofyear
         df['is_weekend'] = df['day_of_week'].isin([5, 6]).astype(int)
         
-        # Create cyclical features for time
+        # Create cyclical features for time - YEAR INDEPENDENT
         df['month_sin'] = np.sin(2 * np.pi * df['month'] / 12)
         df['month_cos'] = np.cos(2 * np.pi * df['month'] / 12)
         df['day_sin'] = np.sin(2 * np.pi * df['day'] / 31)
         df['day_cos'] = np.cos(2 * np.pi * df['day'] / 31)
         df['day_of_week_sin'] = np.sin(2 * np.pi * df['day_of_week'] / 7)
         df['day_of_week_cos'] = np.cos(2 * np.pi * df['day_of_week'] / 7)
+        
+        # Add seasonal features
+        df['season'] = df['month'].apply(self._get_season)
+        df['season_sin'] = np.sin(2 * np.pi * df['season'] / 4)
+        df['season_cos'] = np.cos(2 * np.pi * df['season'] / 4)
+        
+        # Add holiday features
+        df['is_holiday'] = df['OCCUPANCY_DATE'].apply(lambda x: x in self.canada_holidays).astype(int)
+        
+        # Process weather data - TEMPERATURE ONLY
+        print("Processing weather data for temperature only...")
+        weather_data = self.weather_processor.process_weather_data()
+        
+        if weather_data is not None:
+            # Merge weather data with shelter data
+            # Convert both to string format for consistent merging
+            df['date_str'] = df['OCCUPANCY_DATE'].dt.strftime('%Y-%m-%d')
+            weather_data['date_str'] = weather_data['date'].astype(str)
+            
+            # Merge on date string
+            df = df.merge(weather_data[['date_str', 'temp_mean', 'month', 'day']], 
+                         on='date_str', 
+                         how='left', 
+                         suffixes=('', '_weather'))
+            
+            # Fill missing temperature data with monthly averages
+            if 'temp_mean' in df.columns:
+                monthly_avg = df.groupby('month')['temp_mean'].mean()
+                df['temp_mean'] = df['temp_mean'].fillna(df['month'].map(monthly_avg))
+            
+            print(f"Added temperature feature")
+        else:
+            print("Warning: No weather data available, using simulated temperature")
+            # Add simulated temperature
+            df['temp_mean'] = df['month'].apply(lambda x: self._simulate_temperature_by_month(x))
         
         # Process location features using sector method
         df = self.location_pipeline.process_location_features(df)
@@ -389,8 +583,32 @@ class ShelterDataPreprocessor:
         
         return df
     
+    def _get_season(self, month):
+        """Get season (1=Winter, 2=Spring, 3=Summer, 4=Fall)"""
+        if month in [12, 1, 2]:
+            return 1  # Winter
+        elif month in [3, 4, 5]:
+            return 2  # Spring
+        elif month in [6, 7, 8]:
+            return 3  # Summer
+        else:
+            return 4  # Fall
+    
+    def _simulate_temperature_by_month(self, month):
+        """Simulate temperature based on month"""
+        if month in [12, 1, 2]:  # Winter
+            return np.random.normal(-5, 10)
+        elif month in [3, 4, 5]:  # Spring
+            return np.random.normal(10, 8)
+        elif month in [6, 7, 8]:  # Summer
+            return np.random.normal(25, 8)
+        else:  # Fall
+            return np.random.normal(15, 8)
+    
+
+    
     def create_sequences(self, df, sequence_length=30):
-        """Create time series sequences for training"""
+        """Create time series sequences for training - YEAR INDEPENDENT WITH WEATHER"""
         sequences = []
         targets = []
         
@@ -403,14 +621,19 @@ class ShelterDataPreprocessor:
             if len(shelter_data) < sequence_length + 1:
                 continue
                 
-            # Create features for sequence
+            # Create features for sequence - YEAR INDEPENDENT WITH WEATHER
             feature_cols = [
-                'year', 'month', 'day', 'day_of_week', 'day_of_year', 'is_weekend',
+                'month', 'day', 'day_of_week', 'day_of_year', 'is_weekend',
                 'month_sin', 'month_cos', 'day_sin', 'day_cos', 
                 'day_of_week_sin', 'day_of_week_cos',
+                'season', 'season_sin', 'season_cos', 'is_holiday',
                 'ORGANIZATION_NAME_encoded', 'SHELTER_NAME_encoded', 
                 'SECTOR_encoded', 'PROGRAM_NAME_encoded'
             ]
+            
+            # Add temperature feature only
+            if 'temp_mean' in shelter_data.columns:
+                feature_cols.append('temp_mean')
             
             # Add location features
             location_features = [col for col in shelter_data.columns if any(prefix in col for prefix in 
@@ -438,11 +661,11 @@ class ShelterDataPreprocessor:
         return np.array(sequences), np.array(targets)
     
     def prepare_data(self, sequence_length=30):
-        """Main method to prepare data for training"""
+        """Main method to prepare data for training - YEAR INDEPENDENT WITH WEATHER"""
         print("Loading data...")
         df = self.load_data()
         
-        print("Preprocessing data...")
+        print("Preprocessing data (year-independent with weather)...")
         df = self.preprocess_data(df)
         
         print("Creating sequences...")
@@ -605,14 +828,14 @@ class ShelterPredictionModel:
         }
     
     def predict_for_shelter(self, shelter_info, target_date, historical_data=None):
-        """Predict occupancy for a specific shelter on a specific date"""
+        """Predict occupancy for a specific shelter on a specific date - YEAR INDEPENDENT"""
         print(f"Predicting occupancy for shelter: {shelter_info.get('name', 'Unknown')}")
         print(f"Target_date: {target_date}")
         
         # Get location features for the shelter
         location_features = self.location_pipeline.get_location_features_for_prediction(shelter_info)
         
-        # Prepare features for the target date
+        # Prepare features for the target date - YEAR INDEPENDENT
         features = self.prepare_prediction_features(target_date, historical_data)
         
         # Add location features to the feature vector
@@ -659,36 +882,49 @@ class ShelterPredictionModel:
         }
     
     def prepare_prediction_features(self, target_date, historical_data=None):
-        """Prepare features for a specific date prediction"""
+        """Prepare features for a specific date prediction - YEAR INDEPENDENT WITH WEATHER"""
         print(f"Preparing features for {target_date}...")
         
         # Create date range for sequence
         target_dt = pd.to_datetime(target_date)
         start_date = target_dt - timedelta(days=self.sequence_length)
         
-        # Generate features for the sequence
+        # Generate features for the sequence - YEAR INDEPENDENT WITH WEATHER
         sequence_features = []
         
         for i in range(self.sequence_length):
             current_date = start_date + timedelta(days=i)
             
-            # Temporal features
+            # Temporal features - YEAR INDEPENDENT
             features = {
-                'year': current_date.year,
                 'month': current_date.month,
+                'day': current_date.day,
                 'day_of_week': current_date.dayofweek,
-                'day_of_month': current_date.day,
-                'week_of_year': current_date.isocalendar().week,
-                'quarter': current_date.quarter,
-                'season': self._get_season(current_date.month),
+                'day_of_year': current_date.dayofyear,
                 'is_weekend': int(current_date.dayofweek >= 5),
-                'is_month_end': int(current_date.is_month_end),
-                'is_month_start': int(current_date.is_month_start),
-                'is_holiday': int(current_date in self.canada_holidays),
-                'temperature': self._simulate_temperature(current_date),
-                'precipitation_mm': self._simulate_precipitation(current_date),
-                'weather_severity': self._get_weather_severity(current_date)
+                'month_sin': np.sin(2 * np.pi * current_date.month / 12),
+                'month_cos': np.cos(2 * np.pi * current_date.month / 12),
+                'day_sin': np.sin(2 * np.pi * current_date.day / 31),
+                'day_cos': np.cos(2 * np.pi * current_date.day / 31),
+                'day_of_week_sin': np.sin(2 * np.pi * current_date.dayofweek / 7),
+                'day_of_week_cos': np.cos(2 * np.pi * current_date.dayofweek / 7),
+                'season': self._get_season(current_date.month),
+                'season_sin': np.sin(2 * np.pi * self._get_season(current_date.month) / 4),
+                'season_cos': np.cos(2 * np.pi * self._get_season(current_date.month) / 4),
+                'is_holiday': int(current_date in self.canada_holidays)
             }
+            
+            # Add temperature feature only
+            weather_info = self._get_weather_for_date(current_date)
+            if weather_info:
+                features.update({
+                    'temp_mean': weather_info.get('temp_mean', 10)
+                })
+            else:
+                # Fallback to simulated temperature
+                features.update({
+                    'temp_mean': self._simulate_temperature(current_date)
+                })
             
             # Add historical averages if available
             if historical_data is not None:
@@ -701,6 +937,16 @@ class ShelterPredictionModel:
             sequence_features.append(list(features.values()))
         
         return np.array(sequence_features)
+    
+    def _get_weather_for_date(self, date):
+        """Get temperature data for a specific date - TEMPERATURE ONLY"""
+        # This would be implemented to use the WeatherDataProcessor
+        # For now, return simulated temperature
+        return {
+            'temp_mean': self._simulate_temperature(date),
+            'month': date.month,
+            'day': date.day
+        }
     
     def _get_season(self, month):
         """Get season (1=Winter, 2=Spring, 3=Summer, 4=Fall)"""
@@ -726,27 +972,7 @@ class ShelterPredictionModel:
         else:  # Fall
             return np.random.normal(15, 8)
     
-    def _simulate_precipitation(self, date):
-        """Simulate precipitation"""
-        season = self._get_season(date.month)
-        
-        precip_prob = {1: 0.3, 2: 0.4, 3: 0.2, 4: 0.3}[season]
-        
-        if np.random.random() < precip_prob:
-            return np.random.exponential(5)
-        return 0
-    
-    def _get_weather_severity(self, date):
-        """Get weather severity (1=mild, 2=moderate, 3=severe)"""
-        temp = self._simulate_temperature(date)
-        precip = self._simulate_precipitation(date)
-        
-        if (temp < -10) or (temp > 35) or (precip > 20):
-            return 3
-        elif (temp < 0) or (temp > 25) or (precip > 10):
-            return 2
-        else:
-            return 1
+
 
 # ============================================================================
 # 4. MAIN EXECUTION SCRIPT
@@ -754,8 +980,8 @@ class ShelterPredictionModel:
 
 def main():
     """Main execution function"""
-    print("Shelter Prediction with Location Features")
-    print("=" * 50)
+    print("Shelter Prediction with Location Features - YEAR INDEPENDENT WITH WEATHER")
+    print("=" * 70)
     
     # GPU Status Check
     gpus = tf.config.list_physical_devices('GPU')
@@ -766,7 +992,7 @@ def main():
         print("⚠ No GPU detected - training will use CPU")
     
     # Step 1: Data Preprocessing
-    print("\n1. Loading and preprocessing data...")
+    print("\n1. Loading and preprocessing data (year-independent with weather)...")
     preprocessor = ShelterDataPreprocessor()
     X_train, X_test, y_train, y_test = preprocessor.prepare_data(sequence_length=30)
     
@@ -810,9 +1036,10 @@ def main():
     # Step 5: Save Model
     print("\n5. Saving model...")
     os.makedirs('models', exist_ok=True)
-    model.model.save('models/shelter_model_with_location.h5')
-    joblib.dump(preprocessor.scaler, 'models/scaler_with_location.pkl')
-    joblib.dump(preprocessor.location_pipeline, 'models/location_pipeline.pkl')
+    model.model.save('models/shelter_model_with_weather.h5')
+    joblib.dump(preprocessor.scaler, 'models/scaler_with_weather.pkl')
+    joblib.dump(preprocessor.location_pipeline, 'models/location_pipeline_with_weather.pkl')
+    joblib.dump(preprocessor.weather_processor, 'models/weather_processor.pkl')
     
     print("Model and pipeline saved successfully!")
     
@@ -822,8 +1049,8 @@ def main():
 # 5. PREDICTION FUNCTION FOR NEW SHELTERS
 # ============================================================================
 
-def predict_for_new_shelter(shelter_info, target_date, model_path='models/shelter_model_with_location.h5'):
-    """Predict occupancy for a new shelter using location features"""
+def predict_for_new_shelter(shelter_info, target_date, model_path='models/shelter_model_with_weather.h5'):
+    """Predict occupancy for a new shelter using location features - YEAR INDEPENDENT WITH WEATHER"""
     
     # Load model
     model = tf.keras.models.load_model(model_path)
@@ -849,10 +1076,10 @@ if __name__ == "__main__":
     # Run the complete pipeline
     model, preprocessor, results = main()
     
-    # Example: Predict for a new shelter
-    print("\n" + "="*50)
-    print("EXAMPLE: Predicting for a new shelter")
-    print("="*50)
+    # Example: Predict for a new shelter in 2025 with weather
+    print("\n" + "="*60)
+    print("EXAMPLE: Predicting for a new shelter in 2025 with weather data")
+    print("="*60)
     
     new_shelter_info = {
         'name': 'New Downtown Shelter',
@@ -863,17 +1090,132 @@ if __name__ == "__main__":
         'province': 'ON'
     }
     
-    tomorrow = datetime.now() + timedelta(days=1)
-    target_date = tomorrow.strftime('%Y-%m-%d')
+    # Test prediction for 2025 winter
+    target_date_2025_winter = '2025-01-15'  # January 15, 2025
     
-    new_prediction = predict_for_new_shelter(new_shelter_info, target_date)
+    winter_prediction = predict_for_new_shelter(new_shelter_info, target_date_2025_winter)
     
-    print(f"\nNew Shelter Prediction:")
-    print(f"Shelter: {new_prediction['shelter_name']}")
-    print(f"Date: {new_prediction['target_date']}")
-    print(f"Predicted Occupancy: {new_prediction['predicted_occupancy']}")
-    print(f"Max Capacity: {new_prediction['max_capacity']}")
-    print(f"Utilization Rate: {new_prediction['utilization_rate']}%")
-    print(f"Sector: {new_prediction['sector_info']['sector_name']}")
-    print(f"Sector Description: {new_prediction['sector_info']['sector_description']}")
-    print(f"Location Features: {new_prediction['location_features']}") 
+    print(f"\n2025 Winter Prediction Results:")
+    print(f"Shelter: {winter_prediction['shelter_name']}")
+    print(f"Date: {winter_prediction['target_date']}")
+    print(f"Predicted Occupancy: {winter_prediction['predicted_occupancy']}")
+    print(f"Max Capacity: {winter_prediction['max_capacity']}")
+    print(f"Utilization Rate: {winter_prediction['utilization_rate']}%")
+    print(f"Sector: {winter_prediction['sector_info']['sector_name']}")
+    print(f"Sector Description: {winter_prediction['sector_info']['sector_description']}")
+    
+    # Test prediction for 2025 summer
+    target_date_2025_summer = '2025-07-15'  # July 15, 2025
+    
+    summer_prediction = predict_for_new_shelter(new_shelter_info, target_date_2025_summer)
+    
+    print(f"\n2025 Summer Prediction Results:")
+    print(f"Shelter: {summer_prediction['shelter_name']}")
+    print(f"Date: {summer_prediction['target_date']}")
+    print(f"Predicted Occupancy: {summer_prediction['predicted_occupancy']}")
+    print(f"Max Capacity: {summer_prediction['max_capacity']}")
+    print(f"Utilization Rate: {summer_prediction['utilization_rate']}%")
+    print(f"Sector: {summer_prediction['sector_info']['sector_name']}")
+    print(f"Sector Description: {summer_prediction['sector_info']['sector_description']}")
+    
+    # Test prediction for 2025 fall
+    target_date_2025_fall = '2025-10-15'  # October 15, 2025
+    
+    fall_prediction = predict_for_new_shelter(new_shelter_info, target_date_2025_fall)
+    
+    print(f"\n2025 Fall Prediction Results:")
+    print(f"Shelter: {fall_prediction['shelter_name']}")
+    print(f"Date: {fall_prediction['target_date']}")
+    print(f"Predicted Occupancy: {fall_prediction['predicted_occupancy']}")
+    print(f"Max Capacity: {fall_prediction['max_capacity']}")
+    print(f"Utilization Rate: {fall_prediction['utilization_rate']}%")
+    print(f"Sector: {fall_prediction['sector_info']['sector_name']}")
+    print(f"Sector Description: {fall_prediction['sector_info']['sector_description']}")
+
+def merge_weather_and_shelter_data(data_dir='data', output_file='merged_shelter_weather.csv'):
+    """
+    Load, process, and merge weather and shelter data by year, month, and day.
+    Returns merged DataFrame and saves to CSV.
+    """
+    print("=" * 60)
+    print("MERGING WEATHER AND SHELTER DATA")
+    print("=" * 60)
+
+    # --- Load weather data ---
+    print("Loading weather data...")
+    all_weather_data = []
+    for year in [2017, 2018, 2019, 2020]:
+        weather_dir = os.path.join(data_dir, f'Weather {year}')
+        if os.path.exists(weather_dir):
+            print(f"Processing {year}...")
+            for month in range(1, 13):
+                filename = f"en_climate_hourly_ON_6158359_{month:02d}-{year}_P1H.csv"
+                filepath = os.path.join(weather_dir, filename)
+                if os.path.exists(filepath):
+                    try:
+                        df = pd.read_csv(filepath)
+                        df = df[['Date/Time', 'Temp (°C)', 'Year', 'Month', 'Day']]
+                        all_weather_data.append(df)
+                        print(f"  Loaded {filename}")
+                    except Exception as e:
+                        print(f"  Error loading {filename}: {e}")
+    if not all_weather_data:
+        print("No weather data found!")
+        return None
+    weather_df = pd.concat(all_weather_data, ignore_index=True)
+    weather_df['Date/Time'] = pd.to_datetime(weather_df['Date/Time'])
+    weather_df['year'] = weather_df['Date/Time'].dt.year
+    weather_df['month'] = weather_df['Date/Time'].dt.month
+    weather_df['day'] = weather_df['Date/Time'].dt.day
+    weather_df['Temp (°C)'] = pd.to_numeric(weather_df['Temp (°C)'], errors='coerce')
+    weather_df['OCCUPANCY_DATE'] = weather_df['Date/Time'].dt.strftime('%Y-%m-%dT00:00:00')
+    daily_weather = weather_df.groupby(['OCCUPANCY_DATE', 'year', 'month', 'day']).agg({'Temp (°C)': 'mean'}).reset_index()
+    daily_weather = daily_weather.rename(columns={'Temp (°C)': 'temp_mean'})
+    print(f"Daily weather data shape: {daily_weather.shape}")
+    print(f"Date range: {daily_weather['OCCUPANCY_DATE'].min()} to {daily_weather['OCCUPANCY_DATE'].max()}")
+
+    # --- Load shelter data ---
+    print("Loading shelter data...")
+    all_shelter_data = []
+    for year in [2017, 2018, 2019, 2020]:
+        filename = f"Daily shelter occupancy {year}.csv"
+        filepath = os.path.join(data_dir, filename)
+        if os.path.exists(filepath):
+            try:
+                df = pd.read_csv(filepath)
+                all_shelter_data.append(df)
+                print(f"Loaded {filename}")
+            except Exception as e:
+                print(f"Error loading {filename}: {e}")
+    if not all_shelter_data:
+        print("No shelter data found!")
+        return None
+    shelter_df = pd.concat(all_shelter_data, ignore_index=True)
+    shelter_df['OCCUPANCY_DATE'] = pd.to_datetime(shelter_df['OCCUPANCY_DATE'], errors='coerce')
+    shelter_df = shelter_df.dropna(subset=['OCCUPANCY_DATE'])
+    shelter_df['OCCUPANCY_DATE'] = shelter_df['OCCUPANCY_DATE'].dt.strftime('%Y-%m-%dT%H:%M:%S')
+    print(f"Combined shelter data shape: {shelter_df.shape}")
+
+    # --- Merge ---
+    print("\nMerging data on OCCUPANCY_DATE...")
+    merged_data = shelter_df.merge(daily_weather[['OCCUPANCY_DATE', 'temp_mean', 'month', 'day']], on='OCCUPANCY_DATE', how='left')
+    print(f"Merged data shape: {merged_data.shape}")
+    print(f"Temperature data available for {merged_data['temp_mean'].notna().sum()} records")
+    print(f"Missing temperature data for {merged_data['temp_mean'].isna().sum()} records")
+    if merged_data['temp_mean'].isna().sum() > 0:
+        print("Filling missing temperature data...")
+        monthly_avg = merged_data.groupby('month')['temp_mean'].mean()
+        merged_data['temp_mean'] = merged_data['temp_mean'].fillna(
+            merged_data['month'].map(monthly_avg)
+        )
+        print(f"After filling: {merged_data['temp_mean'].isna().sum()} missing values")
+    print("\nSample of merged data:")
+    sample_cols = ['OCCUPANCY_DATE', 'SHELTER_NAME', 'OCCUPANCY', 'CAPACITY', 'temp_mean', 'month', 'day']
+    available_cols = [col for col in sample_cols if col in merged_data.columns]
+    print(merged_data[available_cols].head(10))
+    merged_data.to_csv(output_file, index=False)
+    print(f"\nMerged data saved to: {output_file}")
+    return merged_data
+
+# Call the merge function so merged data is available when running the notebook
+merged_df = merge_weather_and_shelter_data() 
