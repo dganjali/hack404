@@ -4,10 +4,12 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 const { PythonShell } = require('python-shell');
+const axios = require('axios');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const PYTHON_API_URL = process.env.PYTHON_API_URL || 'http://localhost:5000';
 
 // Middleware
 app.use(cors());
@@ -49,6 +51,32 @@ const generateShelterId = () => {
 // Helper function to generate alert ID
 const generateAlertId = () => {
   return 'alert_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+};
+
+// Helper function to call Python prediction API
+const callPythonPredictionAPI = async (shelter_info, target_date) => {
+  try {
+    const response = await axios.post(`${PYTHON_API_URL}/predict`, {
+      shelter_info: shelter_info,
+      target_date: target_date
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error calling Python prediction API:', error.message);
+    // Fallback to simulated prediction if Python API is not available
+    return {
+      shelter_name: shelter_info.name,
+      target_date: target_date,
+      predicted_occupancy: Math.floor(Math.random() * shelter_info.maxCapacity * 0.8) + Math.floor(shelter_info.maxCapacity * 0.2),
+      max_capacity: shelter_info.maxCapacity,
+      utilization_rate: Math.floor(Math.random() * 80) + 20,
+      sector_info: {
+        sector_id: 'unknown',
+        sector_name: 'Unknown',
+        sector_description: 'Unknown area'
+      }
+    };
+  }
 };
 
 // Routes
@@ -156,7 +184,7 @@ app.get('/api/shelters', authenticateToken, (req, res) => {
 // Add new shelter
 app.post('/api/shelters', authenticateToken, (req, res) => {
   try {
-    const { name, address, maxCapacity, phone, email, description } = req.body;
+    const { name, address, maxCapacity, phone, email, description, postal_code } = req.body;
     
     if (!name || !address || !maxCapacity) {
       return res.status(400).json({ error: 'Name, address, and max capacity are required' });
@@ -170,6 +198,7 @@ app.post('/api/shelters', authenticateToken, (req, res) => {
       phone: phone || '',
       email: email || '',
       description: description || '',
+      postal_code: postal_code || '',
       createdAt: new Date().toISOString(),
       userId: req.user.userId
     };
@@ -195,7 +224,7 @@ app.post('/api/shelters', authenticateToken, (req, res) => {
 app.put('/api/shelters/:shelterId', authenticateToken, (req, res) => {
   try {
     const { shelterId } = req.params;
-    const { name, address, maxCapacity, phone, email, description } = req.body;
+    const { name, address, maxCapacity, phone, email, description, postal_code } = req.body;
     
     const userSheltersList = userShelters[req.user.userId] || [];
     const shelterIndex = userSheltersList.findIndex(s => s.id === shelterId);
@@ -212,6 +241,7 @@ app.put('/api/shelters/:shelterId', authenticateToken, (req, res) => {
       phone: phone || userSheltersList[shelterIndex].phone,
       email: email || userSheltersList[shelterIndex].email,
       description: description || userSheltersList[shelterIndex].description,
+      postal_code: postal_code || userSheltersList[shelterIndex].postal_code,
       updatedAt: new Date().toISOString()
     };
 
@@ -337,7 +367,7 @@ app.get('/api/shelters/:shelterId/data', authenticateToken, (req, res) => {
 });
 
 // Predict occupancy for a shelter
-app.post('/api/shelters/:shelterId/predict', authenticateToken, (req, res) => {
+app.post('/api/shelters/:shelterId/predict', authenticateToken, async (req, res) => {
   try {
     const { shelterId } = req.params;
     const { date } = req.body;
@@ -353,24 +383,17 @@ app.post('/api/shelters/:shelterId/predict', authenticateToken, (req, res) => {
       return res.status(404).json({ error: 'Shelter not found' });
     }
 
-    // For now, we'll simulate predictions based on historical data
-    // In production, you'd call the Python prediction model
-    const historicalData = shelterData[shelterId] || [];
-    let prediction = Math.floor(Math.random() * shelter.maxCapacity * 0.8) + Math.floor(shelter.maxCapacity * 0.2);
-    
-    if (historicalData.length > 0) {
-      // Use average of recent data as base prediction
-      const recentData = historicalData.slice(-7); // Last 7 days
-      const avgOccupancy = recentData.reduce((sum, d) => sum + d.occupancy, 0) / recentData.length;
-      prediction = Math.floor(avgOccupancy * (0.8 + Math.random() * 0.4)); // Add some variation
-    }
+    // Call Python prediction API
+    const prediction = await callPythonPredictionAPI(shelter, date);
 
     res.json({
       shelterId,
       shelterName: shelter.name,
       date,
-      predicted_occupancy: prediction,
-      maxCapacity: shelter.maxCapacity
+      predicted_occupancy: prediction.predicted_occupancy,
+      maxCapacity: shelter.maxCapacity,
+      utilization_rate: prediction.utilization_rate,
+      sector_info: prediction.sector_info
     });
 
   } catch (error) {
@@ -408,7 +431,7 @@ app.put('/api/alerts/:alertId/read', authenticateToken, (req, res) => {
 });
 
 // Get dashboard data
-app.get('/api/dashboard', authenticateToken, (req, res) => {
+app.get('/api/dashboard', authenticateToken, async (req, res) => {
   try {
     const userSheltersList = userShelters[req.user.userId] || [];
     const userAlerts = alerts[req.user.userId] || [];
@@ -429,15 +452,15 @@ app.get('/api/dashboard', authenticateToken, (req, res) => {
     };
 
     // Calculate totals and prepare shelter data
-    userSheltersList.forEach(shelter => {
+    for (const shelter of userSheltersList) {
       const shelterDataList = shelterData[shelter.id] || [];
       const todayData = shelterDataList.find(d => d.date === today);
       const currentOccupancy = todayData ? todayData.occupancy : 0;
       
-      // Simulate prediction for today
-      const prediction = Math.floor(Math.random() * shelter.maxCapacity * 0.8) + Math.floor(shelter.maxCapacity * 0.2);
+      // Get prediction from Python API
+      const prediction = await callPythonPredictionAPI(shelter, today);
       
-      totalPredicted += prediction;
+      totalPredicted += prediction.predicted_occupancy;
       totalCapacity += shelter.maxCapacity;
       totalUtilization += currentOccupancy;
       shelterCount++;
@@ -448,10 +471,11 @@ app.get('/api/dashboard', authenticateToken, (req, res) => {
         address: shelter.address,
         maxCapacity: shelter.maxCapacity,
         currentOccupancy,
-        predicted_occupancy: prediction,
-        utilization_rate: Math.round((currentOccupancy / shelter.maxCapacity) * 100)
+        predicted_occupancy: prediction.predicted_occupancy,
+        utilization_rate: Math.round((currentOccupancy / shelter.maxCapacity) * 100),
+        sector_info: prediction.sector_info
       });
-    });
+    }
 
     dashboardData.total_predicted = totalPredicted;
     dashboardData.total_capacity = totalCapacity;

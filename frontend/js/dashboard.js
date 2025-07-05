@@ -125,6 +125,10 @@ function createShelterCard(shelter) {
                 <span class="shelter-info-value">${shelter.address}</span>
             </div>
             <div class="shelter-info-item">
+                <span class="shelter-info-label">Sector</span>
+                <span class="shelter-info-value">${shelter.sector_info ? shelter.sector_info.sector_name : 'Unknown'}</span>
+            </div>
+            <div class="shelter-info-item">
                 <span class="shelter-info-label">Capacity</span>
                 <span class="shelter-info-value">${shelter.maxCapacity}</span>
             </div>
@@ -174,6 +178,7 @@ function updateShelterTable(shelters) {
             <tr>
                 <th>Name</th>
                 <th>Address</th>
+                <th>Sector</th>
                 <th>Capacity</th>
                 <th>Current</th>
                 <th>Predicted</th>
@@ -186,6 +191,7 @@ function updateShelterTable(shelters) {
                 <tr>
                     <td>${shelter.name}</td>
                     <td>${shelter.address}</td>
+                    <td>${shelter.sector_info ? shelter.sector_info.sector_name : 'Unknown'}</td>
                     <td>${shelter.maxCapacity}</td>
                     <td>${shelter.currentOccupancy}</td>
                     <td>${shelter.predicted_occupancy}</td>
@@ -421,7 +427,8 @@ async function handleAddShelter(event) {
         maxCapacity: formData.get('shelterMaxCapacity') || document.getElementById('shelterMaxCapacity').value,
         phone: formData.get('shelterPhone') || document.getElementById('shelterPhone').value,
         email: formData.get('shelterEmail') || document.getElementById('shelterEmail').value,
-        description: formData.get('shelterDescription') || document.getElementById('shelterDescription').value
+        description: formData.get('shelterDescription') || document.getElementById('shelterDescription').value,
+        postal_code: formData.get('shelterPostalCode') || document.getElementById('shelterPostalCode').value
     };
     
     try {
@@ -471,6 +478,7 @@ async function editShelter(shelterId) {
         document.getElementById('editShelterPhone').value = shelter.phone || '';
         document.getElementById('editShelterEmail').value = shelter.email || '';
         document.getElementById('editShelterDescription').value = shelter.description || '';
+        document.getElementById('editShelterPostalCode').value = shelter.postal_code || '';
         
         // Show edit modal
         document.getElementById('editShelterModal').style.display = 'block';
@@ -497,7 +505,8 @@ async function handleEditShelter(event) {
         maxCapacity: document.getElementById('editShelterMaxCapacity').value,
         phone: document.getElementById('editShelterPhone').value,
         email: document.getElementById('editShelterEmail').value,
-        description: document.getElementById('editShelterDescription').value
+        description: document.getElementById('editShelterDescription').value,
+        postal_code: document.getElementById('editShelterPostalCode').value
     };
     
     try {
