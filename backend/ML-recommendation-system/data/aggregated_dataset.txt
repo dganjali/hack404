@@ -1,0 +1,1 @@
+This data branch contains the chronological aggregation of ALL 2017-2020 data (regardless of use for train-test split) to increase dataset robustness and provde further model context & history.
