@@ -8,6 +8,7 @@ import joblib
 import holidays
 import requests
 import warnings
+from location_features import LocationFeaturePipeline
 warnings.filterwarnings('ignore')
 
 class ShelterDataPreprocessor:
@@ -17,6 +18,7 @@ class ShelterDataPreprocessor:
         self.scaler = StandardScaler()
         self.shelter_names = None
         self.canada_holidays = holidays.Canada()
+        self.location_pipeline = LocationFeaturePipeline()
         
     def load_data(self):
         """Load all CSV files and combine them"""
@@ -56,6 +58,9 @@ class ShelterDataPreprocessor:
         df['day_of_week_sin'] = np.sin(2 * np.pi * df['day_of_week'] / 7)
         df['day_of_week_cos'] = np.cos(2 * np.pi * df['day_of_week'] / 7)
         
+        # Process location features using sector method
+        df = self.location_pipeline.process_location_features(df)
+        
         # Encode categorical variables
         categorical_cols = ['ORGANIZATION_NAME', 'SHELTER_NAME', 'SECTOR', 'PROGRAM_NAME']
         
@@ -92,6 +97,11 @@ class ShelterDataPreprocessor:
                 'ORGANIZATION_NAME_encoded', 'SHELTER_NAME_encoded', 
                 'SECTOR_encoded', 'PROGRAM_NAME_encoded'
             ]
+            
+            # Add location features
+            location_features = [col for col in shelter_data.columns if any(prefix in col for prefix in 
+                                                                          ['sector_', 'shelters_in_sector', 'sector_occupancy'])]
+            feature_cols.extend(location_features)
             
             # Add lagged occupancy features
             for lag in range(1, 8):  # 1-7 day lags
@@ -154,6 +164,9 @@ class ShelterDataPreprocessor:
         joblib.dump(self.scaler, os.path.join(save_dir, 'scaler.pkl'))
         joblib.dump(self.shelter_names, os.path.join(save_dir, 'shelter_names.pkl'))
         
+        # Save location pipeline
+        self.location_pipeline.save_pipeline(os.path.join(save_dir, 'location_pipeline.pkl'))
+        
         print(f"Preprocessors saved to {save_dir}/")
     
     def load_preprocessors(self, save_dir='models'):
@@ -161,6 +174,9 @@ class ShelterDataPreprocessor:
         self.label_encoders = joblib.load(os.path.join(save_dir, 'label_encoders.pkl'))
         self.scaler = joblib.load(os.path.join(save_dir, 'scaler.pkl'))
         self.shelter_names = joblib.load(os.path.join(save_dir, 'shelter_names.pkl'))
+        
+        # Load location pipeline
+        self.location_pipeline.load_pipeline(os.path.join(save_dir, 'location_pipeline.pkl'))
 
     def load_and_combine_data(self, file_paths):
         """Load and combine all CSV files"""

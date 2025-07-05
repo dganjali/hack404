@@ -11,6 +11,7 @@ import joblib
 import os
 from datetime import datetime, timedelta
 import holidays
+from location_features import LocationFeaturePipeline
 
 class ShelterPredictionModel:
     def __init__(self, model_type='lstm'):
@@ -20,6 +21,7 @@ class ShelterPredictionModel:
         self.canada_holidays = holidays.Canada()
         self.feature_names = None
         self.sequence_length = 7
+        self.location_pipeline = LocationFeaturePipeline()
         
     def create_lstm_model(self, input_shape):
         """Create LSTM model for time series prediction"""
@@ -277,19 +279,38 @@ class ShelterPredictionModel:
     def predict_for_shelter(self, shelter_info, target_date, historical_data=None):
         """Predict occupancy for a specific shelter on a specific date"""
         print(f"Predicting occupancy for shelter: {shelter_info.get('name', 'Unknown')}")
-        print(f"Target date: {target_date}")
+        print(f"Target_date: {target_date}")
+        
+        # Get location features for the shelter
+        location_features = self.location_pipeline.get_location_features_for_prediction(shelter_info)
         
         # Prepare features
         features = self.prepare_prediction_features(target_date, historical_data)
         
+        # Add location features to the feature vector
+        # This is a simplified approach - in practice, you'd need to match the exact training format
+        location_feature_vector = np.array([
+            location_features.get('sector_encoded', 0),
+            location_features.get('sector_avg_income', 0) / 100000,  # Normalize
+            location_features.get('sector_population_density', 0) / 10000,  # Normalize
+            location_features.get('sector_transit_accessibility', 0),
+            location_features.get('sector_crime_rate', 0),
+            location_features.get('sector_homelessness_rate', 0)
+        ])
+        
+        # Combine temporal and location features
+        # Note: This is a simplified approach - the actual implementation would need to match
+        # the exact feature order and format used during training
+        combined_features = np.concatenate([features, location_feature_vector.reshape(1, -1)], axis=1)
+        
         # Scale features if scaler is available
         if self.scaler is not None:
-            features_reshaped = features.reshape(-1, features.shape[-1])
+            features_reshaped = combined_features.reshape(-1, combined_features.shape[-1])
             features_scaled = self.scaler.transform(features_reshaped)
-            features = features_scaled.reshape(features.shape)
+            combined_features = features_scaled.reshape(combined_features.shape)
         
         # Make prediction
-        prediction = self.model.predict(features.reshape(1, *features.shape))
+        prediction = self.model.predict(combined_features.reshape(1, *combined_features.shape))
         predicted_occupancy = prediction[0][0]
         
         # Apply shelter-specific scaling if capacity is provided
@@ -305,7 +326,13 @@ class ShelterPredictionModel:
             'target_date': target_date,
             'predicted_occupancy': round(predicted_occupancy, 0),
             'max_capacity': shelter_info.get('maxCapacity', None),
-            'utilization_rate': round((predicted_occupancy / shelter_info.get('maxCapacity', 100)) * 100, 1) if shelter_info.get('maxCapacity') else None
+            'utilization_rate': round((predicted_occupancy / shelter_info.get('maxCapacity', 100)) * 100, 1) if shelter_info.get('maxCapacity') else None,
+            'sector_info': {
+                'sector_id': location_features.get('sector_id', 'unknown'),
+                'sector_name': location_features.get('sector_name', 'Unknown'),
+                'sector_description': location_features.get('sector_description', 'Unknown')
+            },
+            'location_features': location_features
         }
     
     def save_model(self, filepath):

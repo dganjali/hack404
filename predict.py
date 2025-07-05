@@ -105,7 +105,11 @@ def main():
     # Create shelter info
     shelter_info = {
         'name': args.shelter_name,
-        'maxCapacity': args.capacity
+        'maxCapacity': args.capacity,
+        'address': args.shelter_name,  # Default address - in practice, get from user input
+        'postal_code': 'M5S 2P1',  # Default postal code - in practice, get from user input
+        'city': 'Toronto',
+        'province': 'ON'
     }
     
     print(f"\nPredicting occupancy for {args.shelter_name}")
@@ -163,7 +167,11 @@ def interactive_mode():
             
             shelter_info = {
                 'name': shelter_name,
-                'maxCapacity': capacity
+                'maxCapacity': capacity,
+                'address': shelter_name,  # Default address
+                'postal_code': 'M5S 2P1',  # Default postal code
+                'city': 'Toronto',
+                'province': 'ON'
             }
             
             prediction = predictor.predict_occupancy(shelter_info, target_date)
@@ -187,7 +195,11 @@ def interactive_mode():
             
             shelter_info = {
                 'name': shelter_name,
-                'maxCapacity': capacity
+                'maxCapacity': capacity,
+                'address': shelter_name,  # Default address
+                'postal_code': 'M5S 2P1',  # Default postal code
+                'city': 'Toronto',
+                'province': 'ON'
             }
             
             predictions = predictor.predict_multiple_dates(shelter_info, start_date, days_ahead)
