@@ -1,5 +1,5 @@
 import pdfplumber
-import pytesseract
+# # import pytesseract  # Skipped for now  # Skipped for now
 from PIL import Image
 import io
 from typing import List, Dict, Any, Optional
@@ -59,13 +59,9 @@ class PDFProcessor:
     def _ocr_page(self, page) -> str:
         """Extract text from page using OCR"""
         try:
-            # Convert page to image
-            img = page.to_image()
-            img_bytes = img.original.convert('RGB')
-            
-            # Use OCR to extract text
-            text = pytesseract.image_to_string(img_bytes)
-            return text.strip()
+            # OCR functionality disabled for now
+            # To enable: install pytesseract and uncomment the import
+            return ""
             
         except Exception as e:
             print(f"OCR failed: {e}")

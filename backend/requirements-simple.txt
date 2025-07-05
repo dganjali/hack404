@@ -1,0 +1,22 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+
+# Web scraping
+playwright
+beautifulsoup4
+requests
+
+# PDF processing
+pdfplumber
+Pillow
+
+# Graph processing
+networkx
+
+# Data processing
+pandas
+python-dotenv
+
+ 
