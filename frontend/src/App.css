@@ -1,0 +1,88 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* React Flow custom styles */
+.react-flow__node {
+  border-radius: 8px;
+  border: 2px solid;
+  padding: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.react-flow__node.actionNode {
+  background-color: #dbeafe;
+  border-color: #3b82f6;
+  color: #1e40af;
+}
+
+.react-flow__node.documentNode {
+  background-color: #dcfce7;
+  border-color: #22c55e;
+  color: #166534;
+}
+
+.react-flow__node.feeNode {
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.react-flow__node.waitNode {
+  background-color: #f3e8ff;
+  border-color: #a855f7;
+  color: #7c3aed;
+}
+
+.react-flow__node.decisionNode {
+  background-color: #fed7aa;
+  border-color: #ea580c;
+  color: #c2410c;
+}
+
+.react-flow__node.infoNode {
+  background-color: #f9fafb;
+  border-color: #6b7280;
+  color: #374151;
+}
+
+.react-flow__edge-path {
+  stroke: #6b7280;
+  stroke-width: 2;
+}
+
+.react-flow__controls {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+} 
